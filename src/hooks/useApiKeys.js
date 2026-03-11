@@ -6,6 +6,7 @@ const DEFAULT_KEYS = {
   anthropic: '',
   gemini: '',
   openrouter: '',
+  localai: '',
 };
 
 function loadKeys() {

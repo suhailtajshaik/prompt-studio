@@ -9,6 +9,7 @@ const PROVIDERS = {
     link: 'https://console.anthropic.com/settings/keys',
     linkText: 'console.anthropic.com',
     placeholder: 'sk-ant-api03-...',
+    local: false,
   },
   gemini: {
     label: 'Google Gemini',
@@ -16,6 +17,7 @@ const PROVIDERS = {
     link: 'https://aistudio.google.com/app/apikey',
     linkText: 'aistudio.google.com',
     placeholder: 'AIza...',
+    local: false,
   },
   openrouter: {
     label: 'OpenRouter',
@@ -23,6 +25,23 @@ const PROVIDERS = {
     link: 'https://openrouter.ai/keys',
     linkText: 'openrouter.ai',
     placeholder: 'sk-or-...',
+    local: false,
+  },
+  localai: {
+    label: 'LocalAI',
+    models: [
+      { id: 'qwen2.5-1.5b', label: 'Qwen 2.5 1.5B — Small, Fast' },
+      { id: 'llama-3.2-3b', label: 'Llama 3.2 3B — Small, Balanced' },
+      { id: 'qwen3-8b', label: 'Qwen3 8B — Medium, Thinking' },
+      { id: 'mistral-7b', label: 'Mistral 7B — Medium, General' },
+      { id: 'deepseek-r1-7b', label: 'DeepSeek R1 7B — Reasoning' },
+      { id: 'deepseek-r1-1.5b', label: 'DeepSeek R1 1.5B — Reasoning, Light' },
+    ],
+    link: 'https://localai.io',
+    linkText: 'localai.io',
+    placeholder: 'No API key needed',
+    local: true,
+    baseUrl: 'http://localhost:8080',
   },
 };
 
@@ -36,12 +55,15 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
   const [visible, setVisible] = useState(false);
 
   const currentProviderInfo = PROVIDERS[provider] || PROVIDERS.anthropic;
-  const isCustomModel = !currentProviderInfo.models.includes(model);
+  const getModelId = (m) => (typeof m === 'object' ? m.id : m);
+  const getModelLabel = (m) => (typeof m === 'object' ? m.label : m);
+  const modelIds = currentProviderInfo.models.map(getModelId);
+  const isCustomModel = !modelIds.includes(model);
 
   const handleProviderChange = (e) => {
     const newProvider = e.target.value;
     onProviderChange(newProvider);
-    onModelChange(PROVIDERS[newProvider].models[0]);
+    onModelChange(getModelId(PROVIDERS[newProvider].models[0]));
   };
 
   const currentKey = apiKeys[provider] || '';
@@ -101,7 +123,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
                 className={inputClass}
               >
                 {currentProviderInfo.models.map(m => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={getModelId(m)} value={getModelId(m)}>{getModelLabel(m)}</option>
                 ))}
                 <option value="custom">Custom Model ID...</option>
               </select>
@@ -123,7 +145,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
           </div>
         </div>
 
-        {/* API Key */}
+        {/* API Key / Local Info */}
         <div className="card p-5 sm:p-7">
           <div className="flex items-center gap-2.5 sm:gap-3 mb-5 sm:mb-7">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-accent/20 bg-accent-light flex items-center justify-center shrink-0">
@@ -131,28 +153,51 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
               <Key size={18} className="text-accent hidden sm:block" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-semibold text-text font-display">{currentProviderInfo.label} API Key</h3>
-              <p className="text-[10px] sm:text-xs text-text-tertiary mt-0.5">Saved to local storage</p>
+              <h3 className="text-xs sm:text-sm font-semibold text-text font-display">
+                {currentProviderInfo.local ? `${currentProviderInfo.label} Setup` : `${currentProviderInfo.label} API Key`}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-text-tertiary mt-0.5">
+                {currentProviderInfo.local ? `Connects to ${currentProviderInfo.baseUrl}` : 'Saved to local storage'}
+              </p>
             </div>
           </div>
 
-          <div className="relative">
-            <input
-              id="api-key-input"
-              type={visible ? 'text' : 'password'}
-              value={currentKey}
-              onChange={(e) => onApiKeysChange({ ...apiKeys, [provider]: e.target.value })}
-              placeholder={currentProviderInfo.placeholder}
-              className={`${inputClass} pr-12 font-mono`}
-            />
-            <button
-              aria-label={visible ? 'Hide API key' : 'Show API key'}
-              onClick={() => setVisible(!visible)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent-light transition-all"
-            >
-              {visible ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          </div>
+          {currentProviderInfo.local ? (
+            <div className="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl bg-success-light border border-success/15">
+              <Check size={14} className="text-success shrink-0 mt-0.5" />
+              <div className="text-[10px] sm:text-xs text-text-secondary leading-relaxed">
+                <p className="mb-1.5 font-medium text-success">No API key required</p>
+                <p>Make sure {currentProviderInfo.label} is running locally at <code className="font-mono text-accent-text">{currentProviderInfo.baseUrl}</code></p>
+                <p className="mt-1.5">
+                  Get started at{' '}
+                  <a href={currentProviderInfo.link} target="_blank" rel="noreferrer"
+                    className="text-accent-text font-medium hover:underline underline-offset-2">
+                    {currentProviderInfo.linkText}
+                  </a>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="relative">
+                <input
+                  id="api-key-input"
+                  type={visible ? 'text' : 'password'}
+                  value={currentKey}
+                  onChange={(e) => onApiKeysChange({ ...apiKeys, [provider]: e.target.value })}
+                  placeholder={currentProviderInfo.placeholder}
+                  className={`${inputClass} pr-12 font-mono`}
+                />
+                <button
+                  aria-label={visible ? 'Hide API key' : 'Show API key'}
+                  onClick={() => setVisible(!visible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent-light transition-all"
+                >
+                  {visible ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Saved keys indicator */}
           {savedProviders.length > 0 && (

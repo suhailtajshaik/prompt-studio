@@ -1,0 +1,16 @@
+name: qwen3-8b
+parameters:
+  model: huggingface://Qwen/Qwen3-8B-GGUF/Qwen3-8B-Q4_K_M.gguf
+backend: llama-cpp
+context_size: 8192
+mirostat: 0
+stopwords:
+  - <|im_end|>
+  - <|endoftext|>
+template:
+  chat_message: |
+    <|im_start|>{{.RoleName}}
+    {{.Content}}<|im_end|>
+  chat: |
+    {{.Input}}
+    <|im_start|>assistant

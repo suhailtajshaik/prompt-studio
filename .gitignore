@@ -3,3 +3,18 @@ dist
 .DS_Store
 *.local
 *.png
+
+# LocalAI runtime files (downloaded at startup, not source-controlled)
+models/*.gguf
+models/*.gguf.partial
+models/*.tar.gz
+models/*.onnx
+models/*.onnx.json
+models/._*
+models/MODEL_CARD
+
+# AIO image auto-generated configs (we only track our 6 custom YAMLs)
+models/text-embedding-ada-002.yaml
+models/stablediffusion.yaml
+models/tts-1.yaml
+models/jina-reranker-*.yaml

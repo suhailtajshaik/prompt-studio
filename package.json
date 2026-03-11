@@ -6,7 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker build -t suhailtaj/prompt-studio:latest .",
+    "docker:run": "docker run -d --name prompt-studio -p 3000:80 suhailtaj/prompt-studio:latest",
+    "docker:push": "docker push suhailtaj/prompt-studio:latest",
+    "docker:build-push": "npm run docker:build && npm run docker:push",
+    "docker:stop": "docker stop prompt-studio && docker rm prompt-studio",
+    "docker:clean": "docker stop prompt-studio 2>/dev/null; docker rm prompt-studio 2>/dev/null; docker rmi suhailtaj/prompt-studio:latest 2>/dev/null; echo 'Cleaned up'",
+    "compose:up": "docker compose up --build -d",
+    "compose:up:gpu": "docker compose --profile gpu up --build -d",
+    "compose:down": "docker compose down",
+    "compose:logs": "docker compose logs -f",
+    "compose:clean": "docker compose down -v"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -1,0 +1,54 @@
+services:
+  prompt-studio:
+    container_name: prompt-studio
+    build: .
+    ports:
+      - "3000:80"
+    depends_on:
+      localai:
+        condition: service_healthy
+    restart: unless-stopped
+
+  localai:
+    container_name: localai
+    image: localai/localai:latest-aio-cpu
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=true
+      - PRELOAD_MODELS=[]
+    volumes:
+      - ./models:/models:cached
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
+      interval: 1m
+      timeout: 20m
+      retries: 5
+    restart: unless-stopped
+
+  # GPU-accelerated variant (use with: docker compose --profile gpu up)
+  localai-gpu:
+    container_name: localai-gpu
+    image: localai/localai:latest-aio-gpu-nvidia-cuda-12
+    profiles:
+      - gpu
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=true
+      - PRELOAD_MODELS=[]
+    volumes:
+      - ./models:/models:cached
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
+      interval: 1m
+      timeout: 20m
+      retries: 5
+    restart: unless-stopped

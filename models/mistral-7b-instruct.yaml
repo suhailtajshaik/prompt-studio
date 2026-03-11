@@ -1,0 +1,14 @@
+name: mistral-7b
+parameters:
+  model: huggingface://bartowski/Mistral-7B-Instruct-v0.3-GGUF/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf
+backend: llama-cpp
+context_size: 8192
+mirostat: 0
+stopwords:
+  - </s>
+  - "[INST]"
+template:
+  chat_message: |
+    [INST] {{.Content}} [/INST]
+  chat: |
+    {{.Input}}
