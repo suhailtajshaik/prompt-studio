@@ -82,7 +82,7 @@ export default function App() {
 
               <ErrorBanner message={error} onDismiss={reset} />
 
-              {!apiKeys[provider] && (
+              {!apiKeys[provider] && provider !== 'ollama' && provider !== 'localai' && (
                 <ApiKeyBanner
                   provider={provider}
                   onAddKey={(key) => setApiKeys({ ...apiKeys, [provider]: key })}
@@ -92,9 +92,9 @@ export default function App() {
 
               <TransformButton
                 onClick={handleTransform}
-                disabled={!badPrompt.trim() || loading || !apiKeys[provider]}
+                disabled={!badPrompt.trim() || loading || (!apiKeys[provider] && provider !== 'ollama' && provider !== 'localai')}
                 loading={loading}
-                hasApiKey={!!apiKeys[provider]}
+                hasApiKey={!!apiKeys[provider] || provider === 'ollama' || provider === 'localai'}
               />
 
               {result && !loading && (

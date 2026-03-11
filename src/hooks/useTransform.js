@@ -91,15 +91,26 @@ Generate the improved prompt now.`;
         } else {
           setError('Unexpected response from API');
         }
-      } else if (provider === 'openrouter') {
-        response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      } else if (provider === 'openrouter' || provider === 'ollama' || provider === 'localai') {
+        const endpoints = {
+          openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+          ollama: 'http://localhost:11434/v1/chat/completions',
+          localai: 'http://localhost:8080/v1/chat/completions',
+        };
+        const defaults = {
+          openrouter: 'anthropic/claude-sonnet-4',
+          ollama: 'llama3.1',
+          localai: 'gpt-4',
+        };
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+        response = await fetch(endpoints[provider], {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
-            model: model || 'anthropic/claude-3.5-sonnet',
+            model: model || defaults[provider],
             messages: [
               { role: 'system', content: SYSTEM_PROMPT },
               { role: 'user', content: userMessage }
@@ -112,7 +123,7 @@ Generate the improved prompt now.`;
           setResult(data.choices[0].message.content);
           return true;
         } else if (data.error) {
-          setError(data.error.message || 'API returned an error');
+          setError(data.error?.message || (typeof data.error === 'string' ? data.error : 'API returned an error'));
         } else {
           setError('Unexpected response from API');
         }
