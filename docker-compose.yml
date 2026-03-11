@@ -1,5 +1,6 @@
 services:
   prompt-studio:
+    container_name: prompt-studio
     build: .
     ports:
       - "3000:80"
@@ -9,36 +10,54 @@ services:
     restart: unless-stopped
 
   localai:
+    container_name: localai
     image: localai/localai:latest-aio-cpu
     ports:
       - "8080:8080"
     environment:
-      - MODELS_PATH=/build/models
+      - LOCALAI_MODELS_PATH=/models
       - DEBUG=true
-      - PRELOAD_MODELS=[{"url":"github:mudler/LocalAI/gallery/llama3.yaml","name":"llama3"},{"url":"github:mudler/LocalAI/gallery/mistral-openorca.yaml","name":"mistral-openorca"},{"url":"github:mudler/LocalAI/gallery/phi-2.yaml","name":"phi-2"},{"url":"github:mudler/LocalAI/gallery/gpt-4.yaml","name":"gpt-4"}]
     volumes:
-      - localai-models:/build/models
+      - localai-models:/models
+      - ./models:/models-config:ro
+    entrypoint: >
+      /bin/sh -c '
+        echo "Copying model configs..."
+        cp /models-config/*.yaml /models/ 2>/dev/null || true
+        echo "Starting LocalAI..."
+        exec /entrypoint.sh "$$@"
+      '
+    command: ["local-ai"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 120s
+      retries: 20
+      start_period: 600s
     restart: unless-stopped
 
   # GPU-accelerated variant (use with: docker compose --profile gpu up)
   localai-gpu:
+    container_name: localai-gpu
     image: localai/localai:latest-aio-gpu-nvidia-cuda-12
     profiles:
       - gpu
     ports:
       - "8080:8080"
     environment:
-      - MODELS_PATH=/build/models
+      - LOCALAI_MODELS_PATH=/models
       - DEBUG=true
-      - PRELOAD_MODELS=[{"url":"github:mudler/LocalAI/gallery/llama3.yaml","name":"llama3"},{"url":"github:mudler/LocalAI/gallery/mistral-openorca.yaml","name":"mistral-openorca"},{"url":"github:mudler/LocalAI/gallery/phi-2.yaml","name":"phi-2"},{"url":"github:mudler/LocalAI/gallery/gpt-4.yaml","name":"gpt-4"}]
     volumes:
-      - localai-models:/build/models
+      - localai-models:/models
+      - ./models:/models-config:ro
+    entrypoint: >
+      /bin/sh -c '
+        echo "Copying model configs..."
+        cp /models-config/*.yaml /models/ 2>/dev/null || true
+        echo "Starting LocalAI..."
+        exec /entrypoint.sh "$$@"
+      '
+    command: ["local-ai"]
     deploy:
       resources:
         reservations:
@@ -50,8 +69,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 120s
+      retries: 20
+      start_period: 600s
     restart: unless-stopped
 
 volumes:

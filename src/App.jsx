@@ -11,6 +11,7 @@ import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
 import ErrorBanner from './components/ErrorBanner';
 import ApiKeyBanner from './components/ApiKeyBanner';
+import TransformingOverlay from './components/TransformingOverlay';
 import { useTransform } from './hooks/useTransform';
 import { useTheme } from './hooks/useTheme';
 import { useApiKeys } from './hooks/useApiKeys';
@@ -80,7 +81,7 @@ export default function App() {
 
               <TechniquePicker selected={techniques} onToggle={toggleTechnique} />
 
-              <ErrorBanner message={error} onDismiss={reset} />
+              <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
               {!apiKeys[provider] && provider !== 'ollama' && provider !== 'localai' && (
                 <ApiKeyBanner
@@ -163,6 +164,10 @@ export default function App() {
               />
             </motion.div>
           )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {loading && <TransformingOverlay />}
         </AnimatePresence>
 
         <footer className="mt-12 sm:mt-20 pt-6 sm:pt-8 border-t border-border/50 text-center">

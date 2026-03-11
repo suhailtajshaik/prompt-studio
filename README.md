@@ -58,7 +58,7 @@ The easiest way to run Prompt Studio with a fully local AI backend:
 docker compose up
 ```
 
-This starts both the Prompt Studio app and LocalAI with pre-loaded models (`llama3`, `mistral-openorca`, `phi-2`, `gpt-4`). First startup will take a while as models are downloaded.
+This starts both the Prompt Studio app and LocalAI. Model configs from the `models/` folder are automatically loaded — LocalAI downloads the model weights on first startup (this can take several minutes).
 
 - App: [http://localhost:3000](http://localhost:3000)
 - LocalAI API: [http://localhost:8080](http://localhost:8080)
@@ -141,6 +141,11 @@ prompt-studio/
 │   ├── App.jsx                  # Main app with tab routing
 │   ├── index.css                # Design system tokens + global styles
 │   └── main.jsx                 # Entry point
+├── models/
+│   ├── llama3-instruct.yaml    # Llama 3 8B model config
+│   ├── gpt-4.yaml              # GPT-4 alias (maps to Phi-2)
+│   ├── mistral-openorca.yaml   # Mistral 7B OpenOrca model config
+│   └── phi-2.yaml              # Phi-2 model config
 ├── docker-compose.yml      # Full stack with LocalAI
 ├── Dockerfile              # Multi-stage production build
 ├── nginx.conf              # SPA routing, gzip, caching

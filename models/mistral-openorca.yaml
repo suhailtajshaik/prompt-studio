@@ -1,0 +1,14 @@
+name: mistral-openorca
+parameters:
+  model: huggingface://TheBloke/Mistral-7B-OpenOrca-GGUF/mistral-7b-openorca.Q4_K_M.gguf
+backend: llama-cpp
+context_size: 4096
+template:
+  chat_message: |
+    <|im_start|>{{.RoleName}}
+    {{.Content}}<|im_end|>
+  chat: |
+    {{.Input}}
+    <|im_start|>assistant
+stopwords:
+  - <|im_end|>

@@ -1,16 +1,28 @@
 import { useState, useCallback } from 'react';
 import { FRAMEWORKS, TECHNIQUES, SYSTEM_PROMPT } from '../data/constants';
 
+const PROVIDER_LABELS = {
+  anthropic: 'Anthropic',
+  gemini: 'Google Gemini',
+  openrouter: 'OpenRouter',
+  ollama: 'Ollama',
+  localai: 'LocalAI',
+};
+
+function makeError(message, details) {
+  return { message, details };
+}
+
 export function useTransform() {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
 
   const transform = useCallback(async (badPrompt, frameworkId, techniqueIds, provider = 'anthropic', model = 'claude-3-7-sonnet-20250219', apiKey) => {
     if (!badPrompt.trim()) return;
 
     setLoading(true);
-    setError('');
+    setError(null);
     setResult('');
 
     const fw = FRAMEWORKS[frameworkId];
@@ -29,7 +41,39 @@ export function useTransform() {
 
 Generate the improved prompt now.`;
 
+    const label = PROVIDER_LABELS[provider] || provider;
+
     try {
+      // Health check for local providers before making the actual request
+      if (provider === 'ollama' || provider === 'localai') {
+        const healthUrls = {
+          ollama: 'http://localhost:11434',
+          localai: 'http://localhost:8080/readyz',
+        };
+        const ports = { ollama: '11434', localai: '8080' };
+        const startCmd = provider === 'ollama' ? 'ollama serve' : 'docker compose up';
+
+        try {
+          const healthResp = await fetch(healthUrls[provider], {
+            method: 'GET',
+            signal: AbortSignal.timeout(3000),
+          });
+          if (!healthResp.ok && provider === 'localai') {
+            setError(makeError(
+              `${label} is still loading. Please wait a moment and try again.`,
+              `Health check returned status ${healthResp.status} at ${healthUrls[provider]}`
+            ));
+            return;
+          }
+        } catch (healthErr) {
+          setError(makeError(
+            `Can't reach ${label}. Make sure it's running before transforming.`,
+            `No response from ${healthUrls[provider]} (port ${ports[provider]})\n\nTo start it, run:\n  ${startCmd}\n\nError: ${healthErr.message}`
+          ));
+          return;
+        }
+      }
+
       let response;
       let data;
 
@@ -60,9 +104,15 @@ Generate the improved prompt now.`;
           setResult(data.content[0].text);
           return true;
         } else if (data.error) {
-          setError(data.error.message || 'API returned an error');
+          setError(makeError(
+            'Something went wrong with Anthropic. Check your API key and try again.',
+            `${data.error.type || 'error'}: ${data.error.message}\nModel: ${model}\nStatus: ${response.status}`
+          ));
         } else {
-          setError('Unexpected response from API');
+          setError(makeError(
+            'Received an unexpected response from Anthropic.',
+            `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
+          ));
         }
       } else if (provider === 'gemini') {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.5-flash'}:generateContent?key=${apiKey || ''}`;
@@ -87,9 +137,15 @@ Generate the improved prompt now.`;
           setResult(data.candidates[0].content.parts[0].text);
           return true;
         } else if (data.error) {
-          setError(data.error.message || 'API returned an error');
+          setError(makeError(
+            'Something went wrong with Gemini. Check your API key and try again.',
+            `${data.error.code || 'error'}: ${data.error.message}\nModel: ${model}\nStatus: ${data.error.status || response.status}`
+          ));
         } else {
-          setError('Unexpected response from API');
+          setError(makeError(
+            'Received an unexpected response from Gemini.',
+            `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
+          ));
         }
       } else if (provider === 'openrouter' || provider === 'ollama' || provider === 'localai') {
         const endpoints = {
@@ -103,6 +159,7 @@ Generate the improved prompt now.`;
           localai: 'gpt-4',
         };
 
+        const usedModel = model || defaults[provider];
         const headers = { 'Content-Type': 'application/json' };
         if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
@@ -110,7 +167,7 @@ Generate the improved prompt now.`;
           method: 'POST',
           headers,
           body: JSON.stringify({
-            model: model || defaults[provider],
+            model: usedModel,
             messages: [
               { role: 'system', content: SYSTEM_PROMPT },
               { role: 'user', content: userMessage }
@@ -123,13 +180,31 @@ Generate the improved prompt now.`;
           setResult(data.choices[0].message.content);
           return true;
         } else if (data.error) {
-          setError(data.error?.message || (typeof data.error === 'string' ? data.error : 'API returned an error'));
+          const errMsg = data.error?.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+          setError(makeError(
+            `${label} couldn't process the request. The model "${usedModel}" may not be available.`,
+            `Endpoint: ${endpoints[provider]}\nModel: ${usedModel}\nError: ${errMsg}\nStatus: ${response.status}`
+          ));
         } else {
-          setError('Unexpected response from API');
+          setError(makeError(
+            `Received an unexpected response from ${label}.`,
+            `Endpoint: ${endpoints[provider]}\nModel: ${usedModel}\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
+          ));
         }
       }
     } catch (err) {
-      setError(`Connection failed: ${err.message}`);
+      if ((provider === 'ollama' || provider === 'localai') && (err.message === 'Failed to fetch' || err.name === 'TypeError')) {
+        const port = provider === 'ollama' ? '11434' : '8080';
+        setError(makeError(
+          `Lost connection to ${label}. The server may have stopped or the model crashed.`,
+          `Request to localhost:${port} failed\nError: ${err.message}\n\nTry restarting the server and ensure the model is loaded.`
+        ));
+      } else {
+        setError(makeError(
+          `Couldn't connect to ${label}. Please check your connection and try again.`,
+          `Provider: ${provider}\nError: ${err.name}: ${err.message}`
+        ));
+      }
     } finally {
       setLoading(false);
     }
@@ -137,7 +212,7 @@ Generate the improved prompt now.`;
 
   const reset = useCallback(() => {
     setResult('');
-    setError('');
+    setError(null);
   }, []);
 
   return { result, loading, error, transform, reset };

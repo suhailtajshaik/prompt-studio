@@ -1,0 +1,15 @@
+name: llama3
+parameters:
+  model: huggingface://QuantFactory/Meta-Llama-3-8B-Instruct-GGUF/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf
+backend: llama-cpp
+context_size: 8192
+stopwords:
+  - <|eot_id|>
+template:
+  chat_message: |
+    <|start_header_id|>{{.RoleName}}<|end_header_id|>
+
+    {{.Content}}<|eot_id|>
+  chat: |
+    {{.Input}}
+    <|start_header_id|>assistant<|end_header_id|>

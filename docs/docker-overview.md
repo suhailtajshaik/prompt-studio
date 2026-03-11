@@ -31,7 +31,7 @@ Run the full stack — Prompt Studio + LocalAI with pre-loaded models:
 docker compose up
 ```
 
-This downloads and starts LocalAI with `llama3`, `mistral-openorca`, `phi-2`, and `gpt-4` models. First startup takes a while as models are downloaded; they are persisted in a Docker volume for subsequent runs.
+Model configs from the `models/` folder (`llama3`, `mistral-openorca`, `phi-2`, `gpt-4`) are automatically loaded — LocalAI downloads the model weights on first startup. Models are persisted in a Docker volume for subsequent runs.
 
 - App: **http://localhost:3000**
 - LocalAI API: **http://localhost:8080**
