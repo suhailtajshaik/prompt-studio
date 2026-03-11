@@ -11,53 +11,32 @@ services:
 
   localai:
     container_name: localai
-    image: localai/localai:latest-aio-cpu
+    image: localai/localai:latest
     ports:
       - "8080:8080"
     environment:
-      - LOCALAI_MODELS_PATH=/models
       - DEBUG=true
     volumes:
-      - localai-models:/models
-      - ./models:/models-config:ro
-    entrypoint: >
-      /bin/sh -c '
-        echo "Copying model configs..."
-        cp /models-config/*.yaml /models/ 2>/dev/null || true
-        echo "Starting LocalAI..."
-        exec /entrypoint.sh "$$@"
-      '
-    command: ["local-ai"]
+      - ./models:/models:cached
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
-      start_period: 600s
+      interval: 1m
+      timeout: 20m
+      retries: 5
     restart: unless-stopped
 
   # GPU-accelerated variant (use with: docker compose --profile gpu up)
   localai-gpu:
     container_name: localai-gpu
-    image: localai/localai:latest-aio-gpu-nvidia-cuda-12
+    image: localai/localai:latest-gpu-nvidia-cuda-12
     profiles:
       - gpu
     ports:
       - "8080:8080"
     environment:
-      - LOCALAI_MODELS_PATH=/models
       - DEBUG=true
     volumes:
-      - localai-models:/models
-      - ./models:/models-config:ro
-    entrypoint: >
-      /bin/sh -c '
-        echo "Copying model configs..."
-        cp /models-config/*.yaml /models/ 2>/dev/null || true
-        echo "Starting LocalAI..."
-        exec /entrypoint.sh "$$@"
-      '
-    command: ["local-ai"]
+      - ./models:/models:cached
     deploy:
       resources:
         reservations:
@@ -67,11 +46,7 @@ services:
               capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
-      start_period: 600s
+      interval: 1m
+      timeout: 20m
+      retries: 5
     restart: unless-stopped
-
-volumes:
-  localai-models:
