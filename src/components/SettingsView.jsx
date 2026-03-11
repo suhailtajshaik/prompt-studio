@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Key, Eye, EyeOff, Info, Cpu, Shield } from 'lucide-react';
+import { Key, Eye, EyeOff, Info, Cpu, Shield, Check, Trash2 } from 'lucide-react';
 
 const PROVIDERS = {
   anthropic: {
@@ -32,7 +32,7 @@ const inputClass = `
   focus:border-accent focus:ring-2 focus:ring-accent/15 focus:bg-surface
 `;
 
-export default function SettingsView({ provider, onProviderChange, model, onModelChange, apiKeys, onApiKeysChange }) {
+export default function SettingsView({ provider, onProviderChange, model, onModelChange, apiKeys, onApiKeysChange, onClearAllKeys }) {
   const [visible, setVisible] = useState(false);
 
   const currentProviderInfo = PROVIDERS[provider] || PROVIDERS.anthropic;
@@ -45,6 +45,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
   };
 
   const currentKey = apiKeys[provider] || '';
+  const savedProviders = Object.keys(PROVIDERS).filter((k) => apiKeys[k]?.length > 0);
 
   return (
     <motion.div
@@ -131,7 +132,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
             </div>
             <div>
               <h3 className="text-xs sm:text-sm font-semibold text-text font-display">{currentProviderInfo.label} API Key</h3>
-              <p className="text-[10px] sm:text-xs text-text-tertiary mt-0.5">Required to call the AI</p>
+              <p className="text-[10px] sm:text-xs text-text-tertiary mt-0.5">Saved to local storage</p>
             </div>
           </div>
 
@@ -153,10 +154,44 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
             </button>
           </div>
 
+          {/* Saved keys indicator */}
+          {savedProviders.length > 0 && (
+            <div className="mt-4 sm:mt-5 space-y-2">
+              <div className="text-[10px] sm:text-xs font-semibold text-text-secondary mb-1.5">Saved Keys</div>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {Object.entries(PROVIDERS).map(([key, info]) => {
+                  const hasSaved = apiKeys[key]?.length > 0;
+                  return (
+                    <span
+                      key={key}
+                      className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono px-2 sm:px-2.5 py-1 rounded-lg border ${
+                        hasSaved
+                          ? 'text-success bg-success-light border-success/20'
+                          : 'text-text-tertiary bg-surface-alt border-border/40'
+                      }`}
+                    >
+                      {hasSaved && <Check size={10} />}
+                      {info.label}
+                    </span>
+                  );
+                })}
+              </div>
+              {savedProviders.length > 0 && onClearAllKeys && (
+                <button
+                  onClick={onClearAllKeys}
+                  className="flex items-center gap-1.5 text-[10px] sm:text-xs text-danger hover:text-danger/80 font-medium mt-2 transition-colors"
+                >
+                  <Trash2 size={11} />
+                  Clear all saved keys
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="flex items-start gap-2.5 sm:gap-3 mt-4 sm:mt-5 p-3 sm:p-4 rounded-xl bg-accent-light/50 border border-accent/15">
             <Shield size={13} className="text-accent shrink-0 mt-0.5" />
             <div className="text-[10px] sm:text-xs text-text-secondary leading-relaxed">
-              <p className="mb-1 sm:mb-1.5">Your key is stored only in this browser session — never sent to any third-party server.</p>
+              <p className="mb-1 sm:mb-1.5">Your keys are saved in local storage and never sent to any third-party server.</p>
               <p>
                 Get your key at{' '}
                 <a href={currentProviderInfo.link} target="_blank" rel="noreferrer"
