@@ -9,7 +9,13 @@
       "Read(//Users/suhailtajshaik/.docker/**)",
       "Bash(docker login:*)",
       "Bash(docker:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "WebSearch",
+      "WebFetch(domain:localai.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:oneuptime.com)"
     ]
   }
 }
