@@ -1,16 +1,19 @@
-# Prompt Studio — Bad Prompt → Good Prompt
+# Prompt Studio
 
-A prompt engineering tool that transforms vague, poorly structured prompts into production-ready ones using established frameworks and techniques.
+Transform vague, poorly structured prompts into production-ready ones using proven frameworks and AI.
 
 ## Features
 
-- **3 Frameworks**: COSTAR, 6-Step Prompt Checklist, Markdown Prompting
-- **6 Techniques**: Zero-Shot, Few-Shot, Chain-of-Thought, Role Prompting, Structured Output, Meta Prompting
-- **Real-time Analysis**: Detects issues in your prompt before transformation (score, severity, fixes)
-- **AI-Powered**: Uses Claude Sonnet via the Anthropic API to rewrite prompts
-- **Before/After Comparison**: See stats on word count expansion and structure improvements
-- **Copy & Download**: One-click copy or download as .txt
-- **Frameworks Reference**: Built-in learning tab with framework details and technique descriptions
+- **3 Frameworks** — COSTAR, 6-Step Prompt Checklist, Markdown Prompting
+- **6 Techniques** — Zero-Shot, Few-Shot, Chain-of-Thought, Role Prompting, Structured Output, Meta Prompting
+- **Real-time Analysis** — Scores your prompt (0-100), detects issues, suggests fixes
+- **Multi-Provider AI** — Anthropic (Claude), Google Gemini, OpenRouter
+- **Persistent API Keys** — Saved to localStorage per provider, never leaves your browser
+- **Before/After Comparison** — Word count expansion and structure improvements
+- **Copy & Download** — One-click copy or download as `.txt`
+- **Learning Center** — Built-in reference for all frameworks and techniques
+- **Dark Mode** — Full light/dark theme support
+- **Fully Responsive** — Works on mobile, tablet, and desktop
 
 ## Tech Stack
 
@@ -19,26 +22,21 @@ A prompt engineering tool that transforms vague, poorly structured prompts into 
 - Tailwind CSS 3
 - Framer Motion 11
 - Lucide React (icons)
-- Anthropic API (Claude Sonnet)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or pnpm
-- Anthropic API key ([get one here](https://console.anthropic.com/settings/keys))
+- API key from one of: [Anthropic](https://console.anthropic.com/settings/keys), [Google AI Studio](https://aistudio.google.com/app/apikey), or [OpenRouter](https://openrouter.ai/keys)
 
 ### Install & Run
 
 ```bash
-# Clone or copy the project
+git clone https://github.com/suhailtajshaik/prompt-builder.git
 cd prompt-builder
-
-# Install dependencies
 npm install
-
-# Start dev server
 npm run dev
 ```
 
@@ -46,9 +44,10 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Configure API Key
 
-1. Click the **Settings** tab
-2. Paste your Anthropic API key (`sk-ant-api03-...`)
-3. The key stays in your browser session only — never sent to any server except the Anthropic API
+1. Go to the **Settings** tab
+2. Select your provider (Anthropic, Gemini, or OpenRouter)
+3. Paste your API key
+4. Keys are saved to localStorage — persistent across sessions, never sent to third parties
 
 ### Build for Production
 
@@ -60,52 +59,59 @@ npm run preview
 ## Project Structure
 
 ```
-prompt-builder/
-├── public/
-│   └── vite.svg
+prompt-studio/
 ├── src/
 │   ├── components/
-│   │   ├── ErrorBanner.jsx     # Dismissible error alerts
-│   │   ├── FrameworkPicker.jsx  # COSTAR / 6-Step / Markdown selector
-│   │   ├── Header.jsx          # Title and description
-│   │   ├── LearnView.jsx       # Frameworks & techniques reference
-│   │   ├── PromptInput.jsx     # Textarea + real-time analysis
-│   │   ├── ResultView.jsx      # Output, stats, before/after, copy
-│   │   ├── SettingsView.jsx    # API key configuration
-│   │   ├── TabBar.jsx          # Navigation tabs
-│   │   ├── TechniquePicker.jsx # Technique multi-selector
-│   │   └── TransformButton.jsx # CTA with loading state
+│   │   ├── ErrorBanner.jsx      # Dismissible error alerts
+│   │   ├── FrameworkPicker.jsx   # COSTAR / 6-Step / Markdown selector
+│   │   ├── Header.jsx           # Title, branding, dark mode toggle
+│   │   ├── LearnView.jsx        # Frameworks & techniques reference
+│   │   ├── PromptInput.jsx      # Textarea + real-time analysis
+│   │   ├── ResultView.jsx       # Output, stats, before/after, copy
+│   │   ├── SettingsView.jsx     # Provider, model, API key config
+│   │   ├── TabBar.jsx           # Navigation tabs
+│   │   ├── TechniquePicker.jsx  # Technique multi-selector
+│   │   └── TransformButton.jsx  # CTA with loading state
 │   ├── data/
-│   │   ├── analyzer.js         # Prompt quality analysis engine
-│   │   └── constants.js        # Frameworks, techniques, system prompt
+│   │   ├── analyzer.js          # Prompt quality scoring engine
+│   │   └── constants.js         # Frameworks, techniques, system prompt
 │   ├── hooks/
-│   │   └── useTransform.js     # API call hook
-│   ├── App.jsx                 # Main app with tab routing
-│   ├── index.css               # Global styles + Tailwind
-│   └── main.jsx                # Entry point
+│   │   ├── useApiKeys.js        # localStorage persistence for API keys
+│   │   ├── useTheme.js          # Dark/light mode toggle
+│   │   └── useTransform.js      # API call hook (Anthropic/Gemini/OpenRouter)
+│   ├── App.jsx                  # Main app with tab routing
+│   ├── index.css                # Design system tokens + global styles
+│   └── main.jsx                 # Entry point
 ├── index.html
 ├── package.json
-├── postcss.config.js
 ├── tailwind.config.js
 └── vite.config.js
 ```
 
 ## How It Works
 
-1. **Paste** your bad/vague prompt
-2. **Analyze** — the tool scores it (0-100) and flags issues with fixes
-3. **Pick** a framework (COSTAR, 6-Step, Markdown Prompting)
+1. **Paste** your vague prompt
+2. **Review** the real-time score and detected issues
+3. **Pick** a framework (COSTAR, 6-Step, or Markdown Prompting)
 4. **Select** techniques (Zero-Shot, Few-Shot, CoT, etc.)
-5. **Transform** — Claude rewrites your prompt using the selected framework + techniques
+5. **Transform** — AI rewrites your prompt using the selected framework + techniques
 6. **Copy** the improved prompt and use it anywhere
 
-## Frameworks Reference
+## Supported Models
+
+| Provider | Models |
+|----------|--------|
+| **Anthropic** | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 |
+| **Google Gemini** | gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash |
+| **OpenRouter** | Any model via custom ID |
+
+## Frameworks
 
 | Framework | Structure | Best For |
 |-----------|-----------|----------|
 | **COSTAR** | Context → Objective → Steps → Tools → Actions → Reflection | System prompts, complex agents |
-| **6-Step** | Task → Context → Examples → Persona → Format → Tone | General-purpose prompting |
-| **Markdown** | Role → Objective → Context → Instructions → Notes | CustomGPTs, clean templates |
+| **6-Step Checklist** | Task → Context → Examples → Persona → Format → Tone | General-purpose prompting |
+| **Markdown Prompting** | Role → Objective → Context → Instructions → Notes | CustomGPTs, clean templates |
 
 ## License
 
