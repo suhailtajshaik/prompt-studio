@@ -7,7 +7,7 @@ Transform vague, poorly structured prompts into production-ready ones using prov
 - **3 Frameworks** — COSTAR, 6-Step Prompt Checklist, Markdown Prompting
 - **6 Techniques** — Zero-Shot, Few-Shot, Chain-of-Thought, Role Prompting, Structured Output, Meta Prompting
 - **Real-time Analysis** — Scores your prompt (0-100), detects issues, suggests fixes
-- **Multi-Provider AI** — Anthropic (Claude), Google Gemini, OpenRouter
+- **Multi-Provider AI** — Anthropic (Claude), Google Gemini, OpenRouter, Ollama, LocalAI
 - **Persistent API Keys** — Saved to localStorage per provider, never leaves your browser
 - **Before/After Comparison** — Word count expansion and structure improvements
 - **Copy & Download** — One-click copy or download as `.txt`
@@ -30,7 +30,7 @@ Transform vague, poorly structured prompts into production-ready ones using prov
 
 - Node.js 18+
 - npm or pnpm
-- API key from one of: [Anthropic](https://console.anthropic.com/settings/keys), [Google AI Studio](https://aistudio.google.com/app/apikey), or [OpenRouter](https://openrouter.ai/keys)
+- API key from one of: [Anthropic](https://console.anthropic.com/settings/keys), [Google AI Studio](https://aistudio.google.com/app/apikey), or [OpenRouter](https://openrouter.ai/keys) (not needed for Ollama/LocalAI)
 
 ### Install & Run
 
@@ -46,9 +46,36 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ### Configure API Key
 
 1. Go to the **Settings** tab
-2. Select your provider (Anthropic, Gemini, or OpenRouter)
-3. Paste your API key
+2. Select your provider (Anthropic, Gemini, OpenRouter, Ollama, or LocalAI)
+3. Paste your API key (not required for Ollama/LocalAI)
 4. Keys are saved to localStorage — persistent across sessions, never sent to third parties
+
+### Run with Docker Compose (with LocalAI)
+
+The easiest way to run Prompt Studio with a fully local AI backend:
+
+```bash
+docker compose up
+```
+
+This starts both the Prompt Studio app and LocalAI with pre-loaded models (`llama3`, `mistral-openorca`, `phi-2`, `gpt-4`). First startup will take a while as models are downloaded.
+
+- App: [http://localhost:3000](http://localhost:3000)
+- LocalAI API: [http://localhost:8080](http://localhost:8080)
+
+For NVIDIA GPU acceleration:
+
+```bash
+docker compose --profile gpu up
+```
+
+To stop everything:
+
+```bash
+docker compose down
+```
+
+Models are persisted in a Docker volume (`localai-models`) and won't be re-downloaded on subsequent runs.
 
 ### Run with Docker
 
@@ -114,6 +141,7 @@ prompt-studio/
 │   ├── App.jsx                  # Main app with tab routing
 │   ├── index.css                # Design system tokens + global styles
 │   └── main.jsx                 # Entry point
+├── docker-compose.yml      # Full stack with LocalAI
 ├── Dockerfile              # Multi-stage production build
 ├── nginx.conf              # SPA routing, gzip, caching
 ├── .dockerignore
@@ -139,6 +167,8 @@ prompt-studio/
 | **Anthropic** | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 |
 | **Google Gemini** | gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash |
 | **OpenRouter** | Any model via custom ID |
+| **Ollama** | llama3, mistral, phi3, gemma |
+| **LocalAI** | gpt-4, llama3, mistral-openorca, phi-2 |
 
 ## Frameworks
 

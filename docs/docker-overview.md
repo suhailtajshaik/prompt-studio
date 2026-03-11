@@ -16,13 +16,39 @@ Paste a bad prompt, pick a framework and technique, and get a structured, high-q
 
 - Stop guessing — use battle-tested frameworks to structure your prompts
 - Real-time analysis catches vague, ambiguous, or underspecified prompts before you waste API calls
-- Works with multiple AI providers (Anthropic, Google Gemini, OpenRouter)
+- Works with multiple AI providers (Anthropic, Google Gemini, OpenRouter, Ollama, LocalAI)
+- Run fully local with Ollama or LocalAI — no API key needed
 - API keys persist in your browser via localStorage — never sent to third parties
 - Dark mode, fully responsive, works on any device
 
 ## Quick Start
 
-### Docker
+### Docker Compose (with LocalAI)
+
+Run the full stack — Prompt Studio + LocalAI with pre-loaded models:
+
+```bash
+docker compose up
+```
+
+This downloads and starts LocalAI with `llama3`, `mistral-openorca`, `phi-2`, and `gpt-4` models. First startup takes a while as models are downloaded; they are persisted in a Docker volume for subsequent runs.
+
+- App: **http://localhost:3000**
+- LocalAI API: **http://localhost:8080**
+
+For NVIDIA GPU acceleration:
+
+```bash
+docker compose --profile gpu up
+```
+
+To stop everything:
+
+```bash
+docker compose down
+```
+
+### Docker (app only)
 
 ```bash
 docker pull suhailtaj/prompt-studio
@@ -36,7 +62,7 @@ podman pull docker.io/suhailtaj/prompt-studio
 podman run -d --name prompt-studio -p 3000:80 docker.io/suhailtaj/prompt-studio
 ```
 
-Open **http://localhost:3000** and go to **Settings** to add your API key.
+Open **http://localhost:3000** and go to **Settings** to configure your provider.
 
 ## Supported Models
 
@@ -45,6 +71,8 @@ Open **http://localhost:3000** and go to **Settings** to add your API key.
 | Anthropic | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 |
 | Google Gemini | gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash |
 | OpenRouter | Any model via custom ID |
+| Ollama | llama3, mistral, phi3, gemma |
+| LocalAI | gpt-4, llama3, mistral-openorca, phi-2 |
 
 ## Links
 
