@@ -27,18 +27,16 @@ const PROVIDERS = {
     placeholder: 'sk-or-...',
     local: false,
   },
-  ollama: {
-    label: 'Ollama',
-    models: ['llama3.1', 'llama3', 'mistral', 'codellama', 'gemma2', 'phi3', 'qwen2'],
-    link: 'https://ollama.com',
-    linkText: 'ollama.com',
-    placeholder: 'No API key needed',
-    local: true,
-    baseUrl: 'http://localhost:11434',
-  },
   localai: {
     label: 'LocalAI',
-    models: ['gpt-4', 'llama3', 'mistral-openorca', 'phi-2'],
+    models: [
+      { id: 'qwen2.5-1.5b', label: 'Qwen 2.5 1.5B — Small, Fast' },
+      { id: 'llama-3.2-3b', label: 'Llama 3.2 3B — Small, Balanced' },
+      { id: 'qwen3-8b', label: 'Qwen3 8B — Medium, Thinking' },
+      { id: 'mistral-7b', label: 'Mistral 7B — Medium, General' },
+      { id: 'deepseek-r1-7b', label: 'DeepSeek R1 7B — Reasoning' },
+      { id: 'deepseek-r1-1.5b', label: 'DeepSeek R1 1.5B — Reasoning, Light' },
+    ],
     link: 'https://localai.io',
     linkText: 'localai.io',
     placeholder: 'No API key needed',
@@ -57,12 +55,15 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
   const [visible, setVisible] = useState(false);
 
   const currentProviderInfo = PROVIDERS[provider] || PROVIDERS.anthropic;
-  const isCustomModel = !currentProviderInfo.models.includes(model);
+  const getModelId = (m) => (typeof m === 'object' ? m.id : m);
+  const getModelLabel = (m) => (typeof m === 'object' ? m.label : m);
+  const modelIds = currentProviderInfo.models.map(getModelId);
+  const isCustomModel = !modelIds.includes(model);
 
   const handleProviderChange = (e) => {
     const newProvider = e.target.value;
     onProviderChange(newProvider);
-    onModelChange(PROVIDERS[newProvider].models[0]);
+    onModelChange(getModelId(PROVIDERS[newProvider].models[0]));
   };
 
   const currentKey = apiKeys[provider] || '';
@@ -122,7 +123,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
                 className={inputClass}
               >
                 {currentProviderInfo.models.map(m => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={getModelId(m)} value={getModelId(m)}>{getModelLabel(m)}</option>
                 ))}
                 <option value="custom">Custom Model ID...</option>
               </select>

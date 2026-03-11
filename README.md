@@ -7,7 +7,7 @@ Transform vague, poorly structured prompts into production-ready ones using prov
 - **3 Frameworks** — COSTAR, 6-Step Prompt Checklist, Markdown Prompting
 - **6 Techniques** — Zero-Shot, Few-Shot, Chain-of-Thought, Role Prompting, Structured Output, Meta Prompting
 - **Real-time Analysis** — Scores your prompt (0-100), detects issues, suggests fixes
-- **Multi-Provider AI** — Anthropic (Claude), Google Gemini, OpenRouter, Ollama, LocalAI
+- **Multi-Provider AI** — Anthropic (Claude), Google Gemini, OpenRouter, LocalAI
 - **Persistent API Keys** — Saved to localStorage per provider, never leaves your browser
 - **Before/After Comparison** — Word count expansion and structure improvements
 - **Copy & Download** — One-click copy or download as `.txt`
@@ -30,7 +30,7 @@ Transform vague, poorly structured prompts into production-ready ones using prov
 
 - Node.js 18+
 - npm or pnpm
-- API key from one of: [Anthropic](https://console.anthropic.com/settings/keys), [Google AI Studio](https://aistudio.google.com/app/apikey), or [OpenRouter](https://openrouter.ai/keys) (not needed for Ollama/LocalAI)
+- API key from one of: [Anthropic](https://console.anthropic.com/settings/keys), [Google AI Studio](https://aistudio.google.com/app/apikey), or [OpenRouter](https://openrouter.ai/keys) (not needed for LocalAI)
 
 ### Install & Run
 
@@ -46,8 +46,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ### Configure API Key
 
 1. Go to the **Settings** tab
-2. Select your provider (Anthropic, Gemini, OpenRouter, Ollama, or LocalAI)
-3. Paste your API key (not required for Ollama/LocalAI)
+2. Select your provider (Anthropic, Gemini, OpenRouter, or LocalAI)
+3. Paste your API key (not required for LocalAI)
 4. Keys are saved to localStorage — persistent across sessions, never sent to third parties
 
 ### Run with Docker Compose (with LocalAI)
@@ -58,7 +58,7 @@ The easiest way to run Prompt Studio with a fully local AI backend:
 docker compose up
 ```
 
-This starts both the Prompt Studio app and LocalAI. Model configs from the `models/` folder are automatically loaded — LocalAI downloads the model weights on first startup (this can take several minutes).
+This starts both the Prompt Studio app and LocalAI. The 6 model configs from the `models/` folder are automatically loaded — LocalAI downloads the GGUF weights on first startup (total ~18 GB, can take several minutes depending on your connection).
 
 - App: [http://localhost:3000](http://localhost:3000)
 - LocalAI API: [http://localhost:8080](http://localhost:8080)
@@ -75,7 +75,7 @@ To stop everything:
 docker compose down
 ```
 
-Models are persisted in a Docker volume (`localai-models`) and won't be re-downloaded on subsequent runs.
+Models are cached in `./models/` and won't be re-downloaded on subsequent runs.
 
 ### Run with Docker
 
@@ -142,10 +142,12 @@ prompt-studio/
 │   ├── index.css                # Design system tokens + global styles
 │   └── main.jsx                 # Entry point
 ├── models/
-│   ├── llama3-instruct.yaml    # Llama 3 8B model config
-│   ├── gpt-4.yaml              # GPT-4 alias (maps to Phi-2)
-│   ├── mistral-openorca.yaml   # Mistral 7B OpenOrca model config
-│   └── phi-2.yaml              # Phi-2 model config
+│   ├── qwen2.5-1.5b-instruct.yaml  # Qwen 2.5 1.5B (small, fast)
+│   ├── llama-3.2-3b-instruct.yaml  # Llama 3.2 3B (small, balanced)
+│   ├── qwen3-8b.yaml               # Qwen3 8B (medium, thinking mode)
+│   ├── mistral-7b-instruct.yaml    # Mistral 7B v0.3 (medium, general)
+│   ├── deepseek-r1-7b.yaml         # DeepSeek R1 7B (reasoning)
+│   └── deepseek-r1-1.5b.yaml       # DeepSeek R1 1.5B (reasoning, light)
 ├── docker-compose.yml      # Full stack with LocalAI
 ├── Dockerfile              # Multi-stage production build
 ├── nginx.conf              # SPA routing, gzip, caching
@@ -167,13 +169,26 @@ prompt-studio/
 
 ## Supported Models
 
+### Cloud Providers
+
 | Provider | Models |
 |----------|--------|
 | **Anthropic** | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 |
 | **Google Gemini** | gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash |
 | **OpenRouter** | Any model via custom ID |
-| **Ollama** | llama3, mistral, phi3, gemma |
-| **LocalAI** | gpt-4, llama3, mistral-openorca, phi-2 |
+
+### LocalAI Models (CPU-Optimized, Q4_K_M Quantization)
+
+| Category | Model | Dropdown Label | GGUF Size |
+|----------|-------|----------------|-----------|
+| **Small** | Qwen 2.5 1.5B | Qwen 2.5 1.5B — Small, Fast | ~1.1 GB |
+| **Small** | Llama 3.2 3B | Llama 3.2 3B — Small, Balanced | ~2.0 GB |
+| **Medium** | Qwen3 8B | Qwen3 8B — Medium, Thinking | ~5.0 GB |
+| **Medium** | Mistral 7B v0.3 | Mistral 7B — Medium, General | ~4.4 GB |
+| **Reasoning** | DeepSeek R1 7B | DeepSeek R1 7B — Reasoning | ~4.7 GB |
+| **Reasoning** | DeepSeek R1 1.5B | DeepSeek R1 1.5B — Reasoning, Light | ~1.1 GB |
+
+**Small models** (8GB RAM) run at ~25-50 tok/s on CPU. **Medium/Reasoning models** (16GB RAM) run at ~10-15 tok/s. All models use Q4_K_M quantization for the best quality-to-speed tradeoff on CPU.
 
 ## Frameworks
 

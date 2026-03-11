@@ -16,8 +16,8 @@ Paste a bad prompt, pick a framework and technique, and get a structured, high-q
 
 - Stop guessing — use battle-tested frameworks to structure your prompts
 - Real-time analysis catches vague, ambiguous, or underspecified prompts before you waste API calls
-- Works with multiple AI providers (Anthropic, Google Gemini, OpenRouter, Ollama, LocalAI)
-- Run fully local with Ollama or LocalAI — no API key needed
+- Works with multiple AI providers (Anthropic, Google Gemini, OpenRouter, LocalAI)
+- Run fully local with LocalAI — no API key needed
 - API keys persist in your browser via localStorage — never sent to third parties
 - Dark mode, fully responsive, works on any device
 
@@ -31,7 +31,7 @@ Run the full stack — Prompt Studio + LocalAI with pre-loaded models:
 docker compose up
 ```
 
-Model configs from the `models/` folder (`llama3`, `mistral-openorca`, `phi-2`, `gpt-4`) are automatically loaded — LocalAI downloads the model weights on first startup. Models are persisted in a Docker volume for subsequent runs.
+The 6 model configs from the `models/` folder are automatically loaded — LocalAI downloads the GGUF weights on first startup (total ~18 GB, can take several minutes depending on your connection). Models are cached in `./models/` for subsequent runs.
 
 - App: **http://localhost:3000**
 - LocalAI API: **http://localhost:8080**
@@ -66,13 +66,26 @@ Open **http://localhost:3000** and go to **Settings** to configure your provider
 
 ## Supported Models
 
+### Cloud Providers
+
 | Provider | Models |
 |----------|--------|
 | Anthropic | claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5 |
 | Google Gemini | gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash |
 | OpenRouter | Any model via custom ID |
-| Ollama | llama3, mistral, phi3, gemma |
-| LocalAI | gpt-4, llama3, mistral-openorca, phi-2 |
+
+### LocalAI Models (CPU-Optimized, Q4_K_M Quantization)
+
+| Category | Model | Dropdown Label | GGUF Size |
+|----------|-------|----------------|-----------|
+| **Small** | Qwen 2.5 1.5B | Qwen 2.5 1.5B — Small, Fast | ~1.1 GB |
+| **Small** | Llama 3.2 3B | Llama 3.2 3B — Small, Balanced | ~2.0 GB |
+| **Medium** | Qwen3 8B | Qwen3 8B — Medium, Thinking | ~5.0 GB |
+| **Medium** | Mistral 7B v0.3 | Mistral 7B — Medium, General | ~4.4 GB |
+| **Reasoning** | DeepSeek R1 7B | DeepSeek R1 7B — Reasoning | ~4.7 GB |
+| **Reasoning** | DeepSeek R1 1.5B | DeepSeek R1 1.5B — Reasoning, Light | ~1.1 GB |
+
+**Small models** (8GB RAM) run at ~25-50 tok/s on CPU. **Medium/Reasoning models** (16GB RAM) run at ~10-15 tok/s. All models use Q4_K_M quantization for the best quality-to-speed tradeoff on CPU.
 
 ## Links
 

@@ -1,8 +1,12 @@
-name: mistral-openorca
+name: qwen3-8b
 parameters:
-  model: huggingface://TheBloke/Mistral-7B-OpenOrca-GGUF/mistral-7b-openorca.Q4_K_M.gguf
+  model: huggingface://Qwen/Qwen3-8B-GGUF/Qwen3-8B-Q4_K_M.gguf
 backend: llama-cpp
-context_size: 4096
+context_size: 8192
+mirostat: 0
+stopwords:
+  - <|im_end|>
+  - <|endoftext|>
 template:
   chat_message: |
     <|im_start|>{{.RoleName}}
@@ -10,5 +14,3 @@ template:
   chat: |
     {{.Input}}
     <|im_start|>assistant
-stopwords:
-  - <|im_end|>

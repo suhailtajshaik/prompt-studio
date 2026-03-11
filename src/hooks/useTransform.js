@@ -5,7 +5,6 @@ const PROVIDER_LABELS = {
   anthropic: 'Anthropic',
   gemini: 'Google Gemini',
   openrouter: 'OpenRouter',
-  ollama: 'Ollama',
   localai: 'LocalAI',
 };
 
@@ -44,31 +43,26 @@ Generate the improved prompt now.`;
     const label = PROVIDER_LABELS[provider] || provider;
 
     try {
-      // Health check for local providers before making the actual request
-      if (provider === 'ollama' || provider === 'localai') {
-        const healthUrls = {
-          ollama: 'http://localhost:11434',
-          localai: 'http://localhost:8080/readyz',
-        };
-        const ports = { ollama: '11434', localai: '8080' };
-        const startCmd = provider === 'ollama' ? 'ollama serve' : 'docker compose up';
+      // Health check for LocalAI before making the actual request
+      if (provider === 'localai') {
+        const healthUrl = 'http://localhost:8080/readyz';
 
         try {
-          const healthResp = await fetch(healthUrls[provider], {
+          const healthResp = await fetch(healthUrl, {
             method: 'GET',
             signal: AbortSignal.timeout(3000),
           });
-          if (!healthResp.ok && provider === 'localai') {
+          if (!healthResp.ok) {
             setError(makeError(
               `${label} is still loading. Please wait a moment and try again.`,
-              `Health check returned status ${healthResp.status} at ${healthUrls[provider]}`
+              `Health check returned status ${healthResp.status} at ${healthUrl}`
             ));
             return;
           }
         } catch (healthErr) {
           setError(makeError(
             `Can't reach ${label}. Make sure it's running before transforming.`,
-            `No response from ${healthUrls[provider]} (port ${ports[provider]})\n\nTo start it, run:\n  ${startCmd}\n\nError: ${healthErr.message}`
+            `No response from ${healthUrl} (port 8080)\n\nTo start it, run:\n  docker compose up\n\nError: ${healthErr.message}`
           ));
           return;
         }
@@ -147,16 +141,14 @@ Generate the improved prompt now.`;
             `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
           ));
         }
-      } else if (provider === 'openrouter' || provider === 'ollama' || provider === 'localai') {
+      } else if (provider === 'openrouter' || provider === 'localai') {
         const endpoints = {
           openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-          ollama: 'http://localhost:11434/v1/chat/completions',
           localai: 'http://localhost:8080/v1/chat/completions',
         };
         const defaults = {
           openrouter: 'anthropic/claude-sonnet-4',
-          ollama: 'llama3.1',
-          localai: 'gpt-4',
+          localai: 'qwen2.5-1.5b',
         };
 
         const usedModel = model || defaults[provider];
@@ -193,11 +185,10 @@ Generate the improved prompt now.`;
         }
       }
     } catch (err) {
-      if ((provider === 'ollama' || provider === 'localai') && (err.message === 'Failed to fetch' || err.name === 'TypeError')) {
-        const port = provider === 'ollama' ? '11434' : '8080';
+      if (provider === 'localai' && (err.message === 'Failed to fetch' || err.name === 'TypeError')) {
         setError(makeError(
           `Lost connection to ${label}. The server may have stopped or the model crashed.`,
-          `Request to localhost:${port} failed\nError: ${err.message}\n\nTry restarting the server and ensure the model is loaded.`
+          `Request to localhost:8080 failed\nError: ${err.message}\n\nTry restarting the server and ensure the model is loaded.`
         ));
       } else {
         setError(makeError(

@@ -5,3 +5,9 @@ dist
 .claude
 *.png
 *.md
+
+# LocalAI model weights (not needed in app Docker image)
+models/*.gguf
+models/*.gguf.partial
+models/*.tar.gz
+models/._*

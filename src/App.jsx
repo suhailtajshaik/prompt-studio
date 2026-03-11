@@ -83,7 +83,7 @@ export default function App() {
 
               <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
-              {!apiKeys[provider] && provider !== 'ollama' && provider !== 'localai' && (
+              {!apiKeys[provider] && provider !== 'localai' && (
                 <ApiKeyBanner
                   provider={provider}
                   onAddKey={(key) => setApiKeys({ ...apiKeys, [provider]: key })}
@@ -93,9 +93,9 @@ export default function App() {
 
               <TransformButton
                 onClick={handleTransform}
-                disabled={!badPrompt.trim() || loading || (!apiKeys[provider] && provider !== 'ollama' && provider !== 'localai')}
+                disabled={!badPrompt.trim() || loading || (!apiKeys[provider] && provider !== 'localai')}
                 loading={loading}
-                hasApiKey={!!apiKeys[provider] || provider === 'ollama' || provider === 'localai'}
+                hasApiKey={!!apiKeys[provider] || provider === 'localai'}
               />
 
               {result && !loading && (
