@@ -12,6 +12,7 @@ import SettingsView from './components/SettingsView';
 import ErrorBanner from './components/ErrorBanner';
 import { useTransform } from './hooks/useTransform';
 import { useTheme } from './hooks/useTheme';
+import { useApiKeys } from './hooks/useApiKeys';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -28,11 +29,7 @@ export default function App() {
 
   const [provider, setProvider] = useState('anthropic');
   const [model, setModel] = useState('claude-sonnet-4-6');
-  const [apiKeys, setApiKeys] = useState({
-    anthropic: '',
-    gemini: '',
-    openrouter: ''
-  });
+  const { apiKeys, setApiKeys, clearAllKeys } = useApiKeys();
 
   const { result, loading, error, transform, reset } = useTransform();
 
@@ -152,6 +149,7 @@ export default function App() {
                 onModelChange={setModel}
                 apiKeys={apiKeys}
                 onApiKeysChange={setApiKeys}
+                onClearAllKeys={clearAllKeys}
               />
             </motion.div>
           )}
