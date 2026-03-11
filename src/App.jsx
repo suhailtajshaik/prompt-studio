@@ -10,6 +10,7 @@ import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
 import ErrorBanner from './components/ErrorBanner';
+import ApiKeyBanner from './components/ApiKeyBanner';
 import { useTransform } from './hooks/useTransform';
 import { useTheme } from './hooks/useTheme';
 import { useApiKeys } from './hooks/useApiKeys';
@@ -81,10 +82,19 @@ export default function App() {
 
               <ErrorBanner message={error} onDismiss={reset} />
 
+              {!apiKeys[provider] && (
+                <ApiKeyBanner
+                  provider={provider}
+                  onAddKey={(key) => setApiKeys({ ...apiKeys, [provider]: key })}
+                  onGoToSettings={() => setTab('settings')}
+                />
+              )}
+
               <TransformButton
                 onClick={handleTransform}
-                disabled={!badPrompt.trim() || loading}
+                disabled={!badPrompt.trim() || loading || !apiKeys[provider]}
                 loading={loading}
+                hasApiKey={!!apiKeys[provider]}
               />
 
               {result && !loading && (
