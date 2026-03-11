@@ -22,6 +22,7 @@ Transform vague, poorly structured prompts into production-ready ones using prov
 - Tailwind CSS 3
 - Framer Motion 11
 - Lucide React (icons)
+- Docker + nginx (production)
 
 ## Getting Started
 
@@ -49,7 +50,29 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 3. Paste your API key
 4. Keys are saved to localStorage — persistent across sessions, never sent to third parties
 
-### Build for Production
+### Run with Docker
+
+```bash
+docker pull suhailtaj/prompt-studio
+docker run -d --name prompt-studio -p 3000:80 suhailtaj/prompt-studio
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+To stop and remove:
+
+```bash
+docker stop prompt-studio && docker rm prompt-studio
+```
+
+### Build Docker Image Locally
+
+```bash
+docker build -t suhailtaj/prompt-studio .
+docker run -d --name prompt-studio -p 3000:80 suhailtaj/prompt-studio
+```
+
+### Build for Production (without Docker)
 
 ```bash
 npm run build
@@ -82,6 +105,9 @@ prompt-studio/
 │   ├── App.jsx                  # Main app with tab routing
 │   ├── index.css                # Design system tokens + global styles
 │   └── main.jsx                 # Entry point
+├── Dockerfile              # Multi-stage production build
+├── nginx.conf              # SPA routing, gzip, caching
+├── .dockerignore
 ├── index.html
 ├── package.json
 ├── tailwind.config.js
