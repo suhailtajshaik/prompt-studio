@@ -65,6 +65,15 @@ To stop and remove:
 docker stop prompt-studio && docker rm prompt-studio
 ```
 
+### Run with Podman
+
+```bash
+podman pull docker.io/suhailtaj/prompt-studio
+podman run -d --name prompt-studio -p 3000:80 docker.io/suhailtaj/prompt-studio
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
 ### Build Docker Image Locally
 
 ```bash
