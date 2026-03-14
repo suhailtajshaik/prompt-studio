@@ -88,6 +88,13 @@ export const TECHNIQUES = [
     description: 'Ask the AI to generate or improve its own prompt. Self-referential optimization for complex use cases.',
     when: 'Prompt optimization, self-improvement',
   },
+  {
+    id: 'clarity',
+    name: 'Clarity Refine',
+    icon: '🔍',
+    description: 'Diagnoses vague or noisy prompts, strips garbage context, extracts real intent, and rebuilds with a clear thought process. Best for messy, contradictory, or unfocused prompts.',
+    when: 'Vague goals, mixed intent, noisy context',
+  },
 ];
 
 export const EXAMPLE_PROMPTS = [
@@ -118,6 +125,7 @@ You have mastery of these frameworks and techniques:
 - Role Prompting: Assign expert persona — best for domain expertise and consistent tone
 - Structured Output: Specify exact format (JSON, table, etc.) — best for data extraction and APIs
 - Meta Prompting: Ask the AI to refine its own approach — best for prompt optimization
+- Clarity Refine: Diagnose the vague/noisy prompt → extract the real intent → strip garbage → rebuild with a clear, focused structure
 
 **Rules for transforming prompts:**
 1. Identify what the user actually wants (even if poorly stated)
@@ -131,4 +139,47 @@ You have mastery of these frameworks and techniques:
 9. Add a persona/role if Role Prompting is selected
 10. Specify output format if Structured Output is selected
 
+**Special rule — Clarity Refine technique:**
+When "Clarity Refine" is selected (alone or combined), output in this exact format before the final prompt:
+
+🔍 DECODING INTENT
+• What you likely meant: [one sentence — the real goal]
+• What was vague/garbage: [bullet list of removed noise, filler, or contradictions]
+• Missing context added: [bullet list of assumptions made to fill gaps]
+
+✅ REFINED PROMPT
+[The clean, structured, ready-to-use prompt here]
+
+Do not add any extra explanation outside this structure when Clarity Refine is active.
+
+**Default output rule (all other techniques):**
 Respond ONLY with the improved prompt text. No explanations, no meta-commentary, no markdown code fences wrapping the prompt. Just the ready-to-use prompt.`;
+
+export const AGENT_SYSTEM_PROMPT = `You are an expert AI systems architect. You receive a clear, structured prompt and decompose it into a multi-agent execution plan.
+
+Your job:
+1. Identify the primary goal and all sub-goals
+2. Break work into discrete agent tasks (3-6 agents max)
+3. For each agent, define: role, responsibilities, tools needed, input spec, output spec, and handoff condition
+
+Respond ONLY with valid JSON in this exact structure:
+{
+  "goal": "One sentence — the primary objective",
+  "agents": [
+    {
+      "id": 1,
+      "name": "Agent name (e.g. Market Researcher)",
+      "role": "One sentence role definition",
+      "responsibilities": ["responsibility 1", "responsibility 2"],
+      "tools": ["tool1", "tool2"],
+      "input": "What this agent receives to start",
+      "output": "What this agent produces",
+      "handoff": "Condition or event that triggers passing to next agent",
+      "receives_from": null,
+      "sends_to": "Agent name or null"
+    }
+  ],
+  "pipeline_summary": "2-3 sentence description of how agents work together"
+}
+
+No markdown fences. No explanation. Pure JSON only.`;
