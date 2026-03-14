@@ -5,7 +5,6 @@ const PROVIDER_LABELS = {
   anthropic: 'Anthropic',
   gemini: 'Google Gemini',
   openrouter: 'OpenRouter',
-  localai: 'LocalAI',
 };
 
 function makeError(message, details) {
@@ -43,31 +42,6 @@ Generate the improved prompt now.`;
     const label = PROVIDER_LABELS[provider] || provider;
 
     try {
-      // Health check for LocalAI before making the actual request
-      if (provider === 'localai') {
-        const healthUrl = 'http://localhost:8080/readyz';
-
-        try {
-          const healthResp = await fetch(healthUrl, {
-            method: 'GET',
-            signal: AbortSignal.timeout(3000),
-          });
-          if (!healthResp.ok) {
-            setError(makeError(
-              `${label} is still loading. Please wait a moment and try again.`,
-              `Health check returned status ${healthResp.status} at ${healthUrl}`
-            ));
-            return;
-          }
-        } catch (healthErr) {
-          setError(makeError(
-            `Can't reach ${label}. Make sure it's running before transforming.`,
-            `No response from ${healthUrl} (port 8080)\n\nTo start it, run:\n  docker compose up\n\nError: ${healthErr.message}`
-          ));
-          return;
-        }
-      }
-
       let response;
       let data;
 
@@ -141,21 +115,12 @@ Generate the improved prompt now.`;
             `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
           ));
         }
-      } else if (provider === 'openrouter' || provider === 'localai') {
-        const endpoints = {
-          openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-          localai: 'http://localhost:8080/v1/chat/completions',
-        };
-        const defaults = {
-          openrouter: 'anthropic/claude-sonnet-4',
-          localai: 'qwen2.5-1.5b',
-        };
-
-        const usedModel = model || defaults[provider];
+      } else if (provider === 'openrouter') {
+        const usedModel = model || 'anthropic/claude-sonnet-4';
         const headers = { 'Content-Type': 'application/json' };
         if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
-        response = await fetch(endpoints[provider], {
+        response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers,
           body: JSON.stringify({
@@ -175,27 +140,20 @@ Generate the improved prompt now.`;
           const errMsg = data.error?.message || (typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
           setError(makeError(
             `${label} couldn't process the request. The model "${usedModel}" may not be available.`,
-            `Endpoint: ${endpoints[provider]}\nModel: ${usedModel}\nError: ${errMsg}\nStatus: ${response.status}`
+            `Model: ${usedModel}\nError: ${errMsg}\nStatus: ${response.status}`
           ));
         } else {
           setError(makeError(
             `Received an unexpected response from ${label}.`,
-            `Endpoint: ${endpoints[provider]}\nModel: ${usedModel}\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
+            `Model: ${usedModel}\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`
           ));
         }
       }
     } catch (err) {
-      if (provider === 'localai' && (err.message === 'Failed to fetch' || err.name === 'TypeError')) {
-        setError(makeError(
-          `Lost connection to ${label}. The server may have stopped or the model crashed.`,
-          `Request to localhost:8080 failed\nError: ${err.message}\n\nTry restarting the server and ensure the model is loaded.`
-        ));
-      } else {
-        setError(makeError(
-          `Couldn't connect to ${label}. Please check your connection and try again.`,
-          `Provider: ${provider}\nError: ${err.name}: ${err.message}`
-        ));
-      }
+      setError(makeError(
+        `Couldn't connect to ${label}. Please check your connection and try again.`,
+        `Provider: ${provider}\nError: ${err.name}: ${err.message}`
+      ));
     } finally {
       setLoading(false);
     }
