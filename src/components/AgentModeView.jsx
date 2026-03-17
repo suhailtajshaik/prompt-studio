@@ -20,10 +20,6 @@ const PROVIDERS = {
     label: 'OpenRouter',
     models: ['anthropic/claude-sonnet-4', 'google/gemini-2.5-pro', 'deepseek/deepseek-chat', 'openai/gpt-4o'],
   },
-  localai: {
-    label: 'LocalAI',
-    models: ['llama-3.2-1b-instruct:q4_k_m'],
-  },
 };
 
 const selectClass = `
@@ -52,7 +48,7 @@ export default function AgentModeView({ provider: initialProvider, model: initia
     decompose(input, provider, model, key);
   };
 
-  const canRun = input.trim() && !loading && (!!apiKeys[provider] || provider === 'localai');
+  const canRun = input.trim() && !loading && !!apiKeys[provider];
 
   const copyBlueprint = async () => {
     if (!agentPlan) return;

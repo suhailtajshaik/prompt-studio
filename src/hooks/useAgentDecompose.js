@@ -5,7 +5,6 @@ const PROVIDER_LABELS = {
   anthropic: 'Anthropic',
   gemini: 'Google Gemini',
   openrouter: 'OpenRouter',
-  localai: 'LocalAI',
 };
 
 function makeError(message, details) {
@@ -13,22 +12,6 @@ function makeError(message, details) {
 }
 
 async function callLLM(provider, model, apiKey, systemPrompt, userMessage) {
-  if (provider === 'localai') {
-    const healthUrl = '/prompt-studio/api/readyz';
-    try {
-      const healthResp = await fetch(healthUrl, {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      if (!healthResp.ok) {
-        throw new Error(`Health check returned status ${healthResp.status}`);
-      }
-    } catch (healthErr) {
-      const label = PROVIDER_LABELS[provider];
-      throw new Error(`Can't reach ${label}. Make sure it's running. (${healthErr.message})`);
-    }
-  }
-
   if (provider === 'anthropic') {
     const headers = {
       'Content-Type': 'application/json',
@@ -81,21 +64,12 @@ async function callLLM(provider, model, apiKey, systemPrompt, userMessage) {
     throw new Error(`Unexpected response (status ${response.status})`);
   }
 
-  // openrouter or localai
-  const endpoints = {
-    openrouter: 'https://openrouter.ai/api/v1/chat/completions',
-    localai: '/prompt-studio/api/v1/chat/completions',
-  };
-  const defaults = {
-    openrouter: 'anthropic/claude-sonnet-4',
-    localai: 'llama-3.2-1b-instruct:q4_k_m',
-  };
-
-  const usedModel = model || defaults[provider];
+  // openrouter
+  const usedModel = model || 'anthropic/claude-sonnet-4';
   const headers = { 'Content-Type': 'application/json' };
   if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
-  const response = await fetch(endpoints[provider], {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers,
     body: JSON.stringify({
