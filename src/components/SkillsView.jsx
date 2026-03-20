@@ -4,10 +4,10 @@ import { Wand2, Download, Copy, Check, Code2 } from 'lucide-react';
 import PromptInput from './PromptInput';
 import ErrorBanner from './ErrorBanner';
 import SkillPreview from './SkillPreview';
-import SkillClarificationCards from './SkillClarificationCards';
+import SmartClarifications from './SmartClarifications';
 import { useSkillGenerator } from '../hooks/useSkillGenerator';
-import { useSkillClarification } from '../hooks/useSkillClarification';
-import { buildClarificationContext } from '../data/clarificationOptions';
+import { useSmartClarifications } from '../hooks/useSmartClarifications';
+import { buildClarificationContext } from '../data/smartClarifications';
 import { downloadZip, downloadMd } from '../utils/skillDownloader';
 
 const pageVariants = {
@@ -29,28 +29,14 @@ export default function SkillsView({ apiKeys, provider, model }) {
   const [language, setLanguage] = useState('python');
   const [input, setInput] = useState('');
   const [copied, setCopied] = useState(null); // 'zip', 'md', or null
-  const [showClarification, setShowClarification] = useState(false);
 
   const { skill, loading, error, generate, reset } = useSkillGenerator();
-  const {
-    selections,
-    selectOption,
-    clearCategory,
-    clearAll,
-    isSelected,
-    hasSelections,
-  } = useSkillClarification();
-
-  const handleToggleClarification = () => {
-    setShowClarification(!showClarification);
-  };
+  const { answers, answerQuestion, clearAnswers } = useSmartClarifications();
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
-    const clarificationContext = buildClarificationContext(selections);
+    const clarificationContext = buildClarificationContext(answers);
     await generate(input, language, provider, model, apiKeys[provider], clarificationContext);
-    // Hide clarification after generating
-    setShowClarification(false);
   };
 
   const handleDownloadZip = async () => {
@@ -130,43 +116,20 @@ export default function SkillsView({ apiKeys, provider, model }) {
       {/* Error */}
       <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
-      {/* Clarification Toggle */}
-      <motion.button
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={handleToggleClarification}
-        className={`
-          relative w-full py-2.5 sm:py-3 rounded-xl
-          text-xs sm:text-sm font-medium transition-all duration-200
-          border-2 flex items-center justify-between px-4
-          ${showClarification
-            ? 'bg-accent/10 border-accent text-accent-text'
-            : 'bg-surface-alt border-border hover:border-accent/50 text-text-secondary'
-          }
-        `}
-      >
-        <span>
-          ✨ Refine your skill {hasSelections() && `(${Object.keys(selections).length} selected)`}
-        </span>
-        <span className={`text-lg transition-transform ${showClarification ? 'rotate-180' : ''}`}>
-          ▼
-        </span>
-      </motion.button>
-
-      {/* Clarification Cards */}
+      {/* Smart Clarifications */}
       <AnimatePresence>
-        {showClarification && (
+        {input.trim() && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
           >
-            <SkillClarificationCards
-              selections={selections}
-              onSelect={selectOption}
-              onClear={clearCategory}
-              onClearAll={clearAll}
+            <SmartClarifications
+              description={input}
+              answers={answers}
+              onAnswer={answerQuestion}
+              onClear={clearAnswers}
             />
           </motion.div>
         )}
