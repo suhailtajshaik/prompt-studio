@@ -97,13 +97,6 @@ export const TECHNIQUES = [
     description: 'Ask the AI to generate or improve its own prompt. Self-referential optimization for complex use cases.',
     when: 'Prompt optimization, self-improvement',
   },
-  {
-    id: 'clarity',
-    name: 'Clarity Refine',
-    icon: '🔍',
-    description: 'Diagnoses vague or noisy prompts, strips garbage context, extracts real intent, and rebuilds with a clear thought process. Best for messy, contradictory, or unfocused prompts.',
-    when: 'Vague goals, mixed intent, noisy context',
-  },
 ];
 
 export const EXAMPLE_PROMPTS = [

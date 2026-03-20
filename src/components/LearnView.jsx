@@ -1,15 +1,6 @@
 import { motion } from 'framer-motion';
-import { ExternalLink, BookOpen, Zap, GraduationCap } from 'lucide-react';
+import { ExternalLink, BookOpen, Zap } from 'lucide-react';
 import { FRAMEWORKS, TECHNIQUES } from '../data/constants';
-
-const DESIGN_PRINCIPLES = [
-  { stage: 'C — Context', prevents: 'Hallucination from missing background' },
-  { stage: 'O — Objective', prevents: 'Scope creep and tangential responses' },
-  { stage: 'S — Steps', prevents: 'Sloppy reasoning and skipped logic' },
-  { stage: 'T — Tools', prevents: 'Wrong tool for the job, or ignoring available tools' },
-  { stage: 'A — Actions', prevents: 'Inconsistent formatting and tone drift' },
-  { stage: 'R — Reflection', prevents: 'Unverified claims shipping to the user' },
-];
 
 const FRAMEWORK_COLORS = {
   costar: '#00B894',
@@ -102,64 +93,6 @@ export default function LearnView() {
                 <span className="inline-block mt-2 sm:mt-2.5 text-[9px] sm:text-[11px] font-mono text-accent-text bg-accent-light px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-accent/15">
                   Best for: {tech.when}
                 </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* COSTAR Design Principles */}
-      <motion.div variants={item} className="card p-5 sm:p-7">
-        <div className="flex items-center gap-2.5 sm:gap-3.5 mb-4 sm:mb-5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-accent-light border border-accent/15 shrink-0">
-            <GraduationCap size={16} className="text-accent sm:hidden" />
-            <GraduationCap size={18} className="text-accent hidden sm:block" />
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-display font-bold text-text">Why COSTAR Works</h3>
-            <p className="text-[10px] sm:text-xs text-text-tertiary mt-0.5">
-              Each letter constrains a different failure mode
-            </p>
-          </div>
-        </div>
-
-        {/* Mobile: stacked cards / Desktop: table */}
-        <div className="hidden sm:block overflow-x-auto rounded-xl border border-border/50">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-surface-alt/60">
-                <th className="p-4 text-xs uppercase tracking-wider text-text-tertiary font-mono font-medium">
-                  Stage
-                </th>
-                <th className="p-4 text-xs uppercase tracking-wider text-text-tertiary font-mono font-medium">
-                  Prevents
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {DESIGN_PRINCIPLES.map((row, i) => (
-                <tr key={i} className="border-t border-border/40 hover:bg-surface-alt/30 transition-colors">
-                  <td className="p-4 text-sm font-semibold font-display text-accent-text whitespace-nowrap">
-                    {row.stage}
-                  </td>
-                  <td className="p-4 text-sm text-text-secondary font-body">
-                    {row.prevents}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile stacked version */}
-        <div className="sm:hidden space-y-2">
-          {DESIGN_PRINCIPLES.map((row, i) => (
-            <div key={i} className="p-3 rounded-xl bg-surface-alt/40 border border-border/30">
-              <div className="text-xs font-semibold font-display text-accent-text mb-1">
-                {row.stage}
-              </div>
-              <div className="text-[10px] text-text-secondary font-body leading-relaxed">
-                {row.prevents}
               </div>
             </div>
           ))}
