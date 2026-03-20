@@ -81,7 +81,7 @@ export function useSkillGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const generate = useCallback(async (skillDescription, language = 'python', provider = 'anthropic', model = 'claude-3-7-sonnet-20250219', apiKey) => {
+  const generate = useCallback(async (skillDescription, language = 'python', provider = 'anthropic', model = 'claude-3-7-sonnet-20250219', apiKey, clarificationContext = '') => {
     if (!skillDescription.trim()) return;
 
     setLoading(true);
@@ -96,11 +96,16 @@ export function useSkillGenerator() {
       let response;
       let data;
 
-      const userMessage = `Generate a complete, self-contained ${languageName} module based on this request:
+      // Build the user message with clarification context if provided
+      let userMessage = `Generate a complete, self-contained ${languageName} module based on this request:
 
-"${skillDescription}"
+"${skillDescription}"`;
 
-Requirements:
+      if (clarificationContext) {
+        userMessage += `\n\n${clarificationContext}`;
+      }
+
+      userMessage += `\n\nRequirements:
 1. Production-ready code (no placeholders)
 2. Self-contained with minimal dependencies
 3. Fully functional with examples
