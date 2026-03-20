@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FRAMEWORKS, TECHNIQUES, SYSTEM_PROMPT } from '../data/constants';
+import { FRAMEWORKS, TECHNIQUES, SYSTEM_PROMPT, DECODE_INTENT_SYSTEM_PROMPT } from '../data/constants';
 
 const PROVIDER_LABELS = {
   anthropic: 'Anthropic',
@@ -24,12 +24,25 @@ export function useTransform() {
     setResult('');
 
     const fw = FRAMEWORKS[frameworkId];
-    const techNames = techniqueIds
-      .map((id) => TECHNIQUES.find((t) => t.id === id)?.name)
-      .filter(Boolean)
-      .join(', ');
+    const isDecodeIntent = fw?.isSpecialWorkflow === true;
 
-    const userMessage = `Transform this bad prompt into a high-quality prompt.
+    let userMessage;
+    let systemPrompt;
+
+    if (isDecodeIntent) {
+      userMessage = `Analyze this unclear or rambling prompt and decode the user's true intent:
+
+"${badPrompt}"
+
+Respond in the exact format specified.`;
+      systemPrompt = DECODE_INTENT_SYSTEM_PROMPT;
+    } else {
+      const techNames = techniqueIds
+        .map((id) => TECHNIQUES.find((t) => t.id === id)?.name)
+        .filter(Boolean)
+        .join(', ');
+
+      userMessage = `Transform this bad prompt into a high-quality prompt.
 
 **Bad Prompt:** "${badPrompt}"
 
@@ -38,6 +51,8 @@ export function useTransform() {
 **Apply Techniques:** ${techNames || 'Zero-Shot'}
 
 Generate the improved prompt now.`;
+      systemPrompt = SYSTEM_PROMPT;
+    }
 
     const label = PROVIDER_LABELS[provider] || provider;
 
@@ -61,7 +76,7 @@ Generate the improved prompt now.`;
           body: JSON.stringify({
             model: model || 'claude-3-7-sonnet-20250219',
             max_tokens: 1500,
-            system: SYSTEM_PROMPT,
+            system: systemPrompt,
             messages: [{ role: 'user', content: userMessage }],
           }),
         });
@@ -91,7 +106,7 @@ Generate the improved prompt now.`;
           },
           body: JSON.stringify({
             systemInstruction: {
-              parts: [{ text: SYSTEM_PROMPT }]
+              parts: [{ text: systemPrompt }]
             },
             contents: [{
               parts: [{ text: userMessage }]
@@ -126,7 +141,7 @@ Generate the improved prompt now.`;
           body: JSON.stringify({
             model: usedModel,
             messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'system', content: systemPrompt },
               { role: 'user', content: userMessage }
             ],
           })

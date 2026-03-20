@@ -2,6 +2,7 @@ import { Layers } from 'lucide-react';
 import { FRAMEWORKS } from '../data/constants';
 
 const FRAMEWORK_COLORS = {
+  decode_intent: { bg: 'rgba(255, 107, 157, 0.08)', border: 'rgba(255, 107, 157, 0.25)', dot: '#ff6b9d' },
   costar: { bg: 'rgba(0, 184, 148, 0.08)', border: 'rgba(0, 184, 148, 0.25)', dot: '#00B894' },
   sixstep: { bg: 'rgba(243, 156, 18, 0.08)', border: 'rgba(243, 156, 18, 0.25)', dot: '#F39C12' },
   markdown: { bg: 'rgba(168, 85, 247, 0.08)', border: 'rgba(168, 85, 247, 0.25)', dot: '#A855F7' },

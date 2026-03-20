@@ -4,25 +4,41 @@ import { Copy, Check, ArrowLeft, Download, Sparkles, TrendingUp, FileText, BarCh
 import { FRAMEWORKS, TECHNIQUES } from '../data/constants';
 
 export default function ResultView({ result, badPrompt, frameworkId, techniqueIds, onBack }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
   const fw = FRAMEWORKS[frameworkId];
+  const isDecodeIntent = fw?.isSpecialWorkflow === true;
   const techNames = techniqueIds
     .map((id) => TECHNIQUES.find((t) => t.id === id)?.name)
     .filter(Boolean);
 
-  const handleCopy = async () => {
+  // Parse Decode Intent output into 3 parts
+  const decodeIntentParts = isDecodeIntent ? parseDecodeIntentOutput(result) : null;
+
+  function parseDecodeIntentOutput(text) {
+    const decodedIntentMatch = text.match(/DECODED_INTENT:\s*(.+?)(?=\n\nINTENT:|$)/s);
+    const intentMatch = text.match(/INTENT:\s*(.+?)(?=\n\nREWRITTEN_PROMPT:|$)/s);
+    const rewrittenMatch = text.match(/REWRITTEN_PROMPT:\s*([\s\S]+?)$/);
+
+    return {
+      decodedIntent: decodedIntentMatch ? decodedIntentMatch[1].trim() : '',
+      intent: intentMatch ? intentMatch[1].trim() : '',
+      rewrittenPrompt: rewrittenMatch ? rewrittenMatch[1].trim() : '',
+    };
+  }
+
+  const handleCopy = async (textToCopy, index) => {
     try {
-      await navigator.clipboard.writeText(result);
+      await navigator.clipboard.writeText(textToCopy);
     } catch {
       const el = document.createElement('textarea');
-      el.value = result;
+      el.value = textToCopy;
       document.body.appendChild(el);
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2500);
   };
 
   const handleDownload = () => {
@@ -30,7 +46,7 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'improved-prompt.txt';
+    a.download = 'decode-intent-result.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -39,6 +55,125 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
   const goodWordCount = result.split(/\s+/).filter(Boolean).length;
   const improvement = Math.round(((goodWordCount - badWordCount) / Math.max(badWordCount, 1)) * 100);
 
+  if (isDecodeIntent && decodeIntentParts) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="space-y-4 sm:space-y-6"
+      >
+        {/* Decode Intent Header */}
+        <div className="card p-4 sm:p-7">
+          <div className="flex items-center gap-2.5 sm:gap-3 mb-4">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0"
+                 style={{ background: fw.color }}>
+              <Sparkles size={13} className="text-white sm:hidden" />
+              <Sparkles size={14} className="text-white hidden sm:block" />
+            </div>
+            <h3 className="text-xs sm:text-sm font-semibold gradient-text font-display tracking-wide">
+              Intent Decoded
+            </h3>
+          </div>
+          <div className="text-[11px] sm:text-xs text-text-tertiary">
+            Your unclear prompt analyzed and decoded into 3 clear, copyable outputs.
+          </div>
+        </div>
+
+        {/* 3 Output Cards - Stacked Vertically */}
+        <div className="space-y-3 sm:space-y-4">
+          {/* 1. Decoded Intent */}
+          <div className="card p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h4 className="text-xs sm:text-sm font-semibold text-text font-display">
+                Decoded Intent
+              </h4>
+              <button
+                onClick={() => handleCopy(decodeIntentParts.decodedIntent, 0)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold
+                           border transition-all duration-200 ${
+                             copiedIndex === 0
+                               ? 'bg-success-light border-success/25 text-success'
+                               : 'text-white border-transparent'
+                           }`}
+                style={copiedIndex !== 0 ? { background: fw.color } : undefined}
+              >
+                {copiedIndex === 0 ? <Check size={11} /> : <Copy size={11} />}
+                {copiedIndex === 0 ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <div className="code-output p-3 sm:p-4 text-xs sm:text-[13px] rounded-lg">
+              {decodeIntentParts.decodedIntent}
+            </div>
+          </div>
+
+          {/* 2. Intent Category */}
+          <div className="card p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h4 className="text-xs sm:text-sm font-semibold text-text font-display">
+                Intent Category
+              </h4>
+              <button
+                onClick={() => handleCopy(decodeIntentParts.intent, 1)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold
+                           border transition-all duration-200 ${
+                             copiedIndex === 1
+                               ? 'bg-success-light border-success/25 text-success'
+                               : 'text-white border-transparent'
+                           }`}
+                style={copiedIndex !== 1 ? { background: fw.color } : undefined}
+              >
+                {copiedIndex === 1 ? <Check size={11} /> : <Copy size={11} />}
+                {copiedIndex === 1 ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <div className="code-output p-3 sm:p-4 text-xs sm:text-[13px] rounded-lg font-semibold">
+              {decodeIntentParts.intent}
+            </div>
+          </div>
+
+          {/* 3. Rewritten Prompt */}
+          <div className="card p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h4 className="text-xs sm:text-sm font-semibold text-text font-display">
+                Rewritten Prompt
+              </h4>
+              <button
+                onClick={() => handleCopy(decodeIntentParts.rewrittenPrompt, 2)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold
+                           border transition-all duration-200 ${
+                             copiedIndex === 2
+                               ? 'bg-success-light border-success/25 text-success'
+                               : 'text-white border-transparent'
+                           }`}
+                style={copiedIndex !== 2 ? { background: fw.color } : undefined}
+              >
+                {copiedIndex === 2 ? <Check size={11} /> : <Copy size={11} />}
+                {copiedIndex === 2 ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <div className="code-output p-3 sm:p-4 max-h-[300px] sm:max-h-[400px] overflow-y-auto text-xs sm:text-[13px] rounded-lg">
+              {decodeIntentParts.rewrittenPrompt}
+            </div>
+          </div>
+        </div>
+
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          className="w-full flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl
+                     text-xs sm:text-sm font-body font-medium text-text-secondary
+                     border border-border bg-surface hover:bg-surface-hover
+                     hover:border-border-focus hover:shadow-sm transition-all duration-200"
+        >
+          <ArrowLeft size={14} />
+          Back to Editor
+        </button>
+      </motion.div>
+    );
+  }
+
+  // Original workflow rendering
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -86,17 +221,17 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
               .txt
             </button>
             <button
-              onClick={handleCopy}
+              onClick={() => handleCopy(result, 0)}
               className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-body font-semibold
                          border transition-all duration-200 ${
-                           copied
+                           copiedIndex === 0
                              ? 'bg-success-light border-success/25 text-success shadow-sm'
                              : 'text-white border-transparent shadow-accent hover:shadow-lg'
                          }`}
-              style={!copied ? { background: 'var(--gradient-primary)' } : undefined}
+              style={copiedIndex !== 0 ? { background: 'var(--gradient-primary)' } : undefined}
             >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? 'Copied!' : 'Copy'}
+              {copiedIndex === 0 ? <Check size={12} /> : <Copy size={12} />}
+              {copiedIndex === 0 ? 'Copied!' : 'Copy'}
             </button>
           </div>
         </div>
