@@ -10,7 +10,6 @@ import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
 import SkillsView from './components/SkillsView';
-import IdeaToPRDModal from './components/IdeaToPRDModal';
 import ErrorBanner from './components/ErrorBanner';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import TransformingOverlay from './components/TransformingOverlay';
@@ -34,7 +33,6 @@ export default function App() {
   const [provider, setProvider] = useState('anthropic');
   const [model, setModel] = useState('claude-sonnet-4-6');
   const { apiKeys, setApiKeys, clearAllKeys } = useApiKeys();
-  const [showIdeaToPRD, setShowIdeaToPRD] = useState(false);
 
   const { result, loading, error, transform, reset } = useTransform();
 
@@ -63,11 +61,7 @@ export default function App() {
       <div className="ambient-bg" />
 
       <div className="relative z-10 w-full px-4 sm:px-6 md:w-[85%] lg:w-[70%] xl:w-[60%] mx-auto py-6 sm:py-10 md:py-14">
-        <Header 
-          dark={dark} 
-          onToggle={() => setDark((d) => !d)}
-          onOpenIdeaToPRD={() => setShowIdeaToPRD(true)}
-        />
+        <Header dark={dark} onToggle={() => setDark((d) => !d)} />
 
         <TabBar active={tab} onChange={setTab} hasResult={!!result} />
 
@@ -193,14 +187,6 @@ export default function App() {
         <AnimatePresence>
           {loading && <TransformingOverlay />}
         </AnimatePresence>
-
-        <IdeaToPRDModal
-          isOpen={showIdeaToPRD}
-          onClose={() => setShowIdeaToPRD(false)}
-          provider={provider}
-          model={model}
-          apiKeys={apiKeys}
-        />
 
         <footer className="mt-12 sm:mt-20 pt-6 sm:pt-8 border-t border-border/50 text-center">
           <p className="text-xs text-text-tertiary/70 font-body">

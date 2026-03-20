@@ -1,6 +1,6 @@
-import { Sun, Moon, Sparkles, Lightbulb } from 'lucide-react';
+import { Sun, Moon, Sparkles } from 'lucide-react';
 
-export default function Header({ dark, onToggle, onOpenIdeaToPRD }) {
+export default function Header({ dark, onToggle }) {
   return (
     <header className="mb-8 sm:mb-12 animate-fade-in">
       <div className="flex items-start justify-between gap-3">
@@ -26,29 +26,16 @@ export default function Header({ dark, onToggle, onOpenIdeaToPRD }) {
           </p>
         </div>
 
-        <div className="flex gap-2 items-center">
-          <button
-            onClick={onOpenIdeaToPRD}
-            aria-label="Open Idea to PRD"
-            className="shrink-0 mt-1 p-2 sm:p-2.5 rounded-xl border border-accent/30 bg-accent-light/40
-                       text-accent hover:text-accent hover:border-accent/60
-                       hover:bg-accent-light/60 hover:shadow-glow
-                       backdrop-blur-sm transition-all duration-200"
-            title="Convert idea to PRD"
-          >
-            <Lightbulb size={16} />
-          </button>
-          <button
-            onClick={onToggle}
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="shrink-0 mt-1 p-2 sm:p-2.5 rounded-xl border border-border bg-surface/80
-                       text-text-tertiary hover:text-accent hover:border-accent/30
-                       hover:bg-accent-light hover:shadow-glow
-                       backdrop-blur-sm transition-all duration-200"
-          >
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
+        <button
+          onClick={onToggle}
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="shrink-0 mt-1 p-2 sm:p-2.5 rounded-xl border border-border bg-surface/80
+                     text-text-tertiary hover:text-accent hover:border-accent/30
+                     hover:bg-accent-light hover:shadow-glow
+                     backdrop-blur-sm transition-all duration-200"
+        >
+          {dark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
       </div>
     </header>
   );
