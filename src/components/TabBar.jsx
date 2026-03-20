@@ -1,9 +1,9 @@
-import { Wrench, Eye, BookOpen, Settings, Bot } from 'lucide-react';
+import { Wrench, Eye, BookOpen, Settings, Wand2 } from 'lucide-react';
 
 const TABS = [
   { id: 'build', label: 'Build', icon: Wrench },
   { id: 'result', label: 'Result', icon: Eye },
-  { id: 'agents', label: 'Agents', shortLabel: 'Agents', icon: Bot },
+  { id: 'skills', label: 'Skills', shortLabel: 'Skills', icon: Wand2 },
   { id: 'learn', label: 'Frameworks', shortLabel: 'Learn', icon: BookOpen },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];

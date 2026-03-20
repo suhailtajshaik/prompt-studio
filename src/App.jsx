@@ -9,7 +9,7 @@ import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
-import AgentModeView from './components/AgentModeView';
+import SkillsView from './components/SkillsView';
 import ErrorBanner from './components/ErrorBanner';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import TransformingOverlay from './components/TransformingOverlay';
@@ -132,20 +132,18 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* AGENTS TAB */}
-          {tab === 'agents' && (
+          {/* SKILLS TAB */}
+          {tab === 'skills' && (
             <motion.div
-              key="agents"
+              key="skills"
               variants={pageVariants}
               initial="initial"
               animate="animate"
               exit="exit"
             >
-              <AgentModeView
+              <SkillsView
                 provider={provider}
-                onProviderChange={setProvider}
                 model={model}
-                onModelChange={setModel}
                 apiKeys={apiKeys}
               />
             </motion.div>
