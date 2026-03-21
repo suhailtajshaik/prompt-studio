@@ -22,56 +22,58 @@ function makeError(message, details) {
 
 function parseSkillOutput(text) {
   if (!text || typeof text !== 'string') {
-    console.error('Invalid input: text is not a string', text);
+    console.error('[PARSER] Invalid input: text is not a string', text);
     return null;
   }
 
-  // Log the raw response for debugging
-  console.log('[PARSER DEBUG] Raw response length:', text.length);
-  console.log('[PARSER DEBUG] First 200 chars:', text.substring(0, 200));
+  console.log('[PARSER] Starting parse, text length:', text.length);
 
-  // Try to extract JSON from markdown code blocks first
-  const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/);
-  if (jsonMatch) {
+  // Try to extract JSON from markdown code blocks (```json ... ```)
+  const jsonMarkdownMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (jsonMarkdownMatch) {
     try {
       console.log('[PARSER] Found JSON in markdown code block');
-      const parsed = JSON.parse(jsonMatch[1]);
-      console.log('[PARSER] Successfully parsed JSON from markdown');
-      return parsed;
+      const parsed = JSON.parse(jsonMarkdownMatch[1]);
+      if (parsed.name && parsed.main_code) {
+        console.log('[PARSER] ✅ Successfully parsed from markdown block');
+        return parsed;
+      }
     } catch (e) {
-      console.error('[PARSER] Failed to parse JSON from markdown:', e.message);
+      console.error('[PARSER] Failed to parse markdown block:', e.message);
     }
   }
 
-  // Try to find JSON object directly (most robust approach)
+  // Try to find JSON object directly (find first { and last })
   try {
     const jsonStart = text.indexOf('{');
     const jsonEnd = text.lastIndexOf('}');
     
     if (jsonStart === -1 || jsonEnd === -1) {
-      console.error('[PARSER] No JSON object found in response');
+      console.error('[PARSER] ❌ No JSON braces found');
       return null;
     }
 
     const jsonString = text.substring(jsonStart, jsonEnd + 1);
-    console.log('[PARSER] Extracted JSON string, length:', jsonString.length);
+    console.log('[PARSER] Found JSON, length:', jsonString.length);
     
     const parsed = JSON.parse(jsonString);
-    console.log('[PARSER] Successfully parsed JSON object directly');
+    console.log('[PARSER] ✅ JSON parsed successfully');
     
     // Validate required fields
-    if (!parsed.name || !parsed.main_code) {
-      console.error('[PARSER] Missing required fields:', {
-        name: parsed.name,
-        main_code: !!parsed.main_code
-      });
+    if (!parsed.name) {
+      console.error('[PARSER] ❌ Missing "name" field');
+      return null;
+    }
+    if (!parsed.main_code) {
+      console.error('[PARSER] ❌ Missing "main_code" field');
       return null;
     }
     
+    console.log('[PARSER] ✅ All required fields present, skill:', parsed.name);
     return parsed;
   } catch (e) {
-    console.error('[PARSER] Failed to parse JSON:', e.message);
-    console.log('[PARSER] Last 200 chars of response:', text.substring(Math.max(0, text.length - 200)));
+    console.error('[PARSER] ❌ Failed to parse JSON:', e.message);
+    console.log('[PARSER] Response preview:', text.substring(0, 500));
     return null;
   }
 }
