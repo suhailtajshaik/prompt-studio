@@ -28,15 +28,22 @@ function parseSkillOutput(text) {
 
   console.log('[PARSER] Starting parse, text length:', text.length);
 
+  // Required fields that must be present in the response
+  const REQUIRED_FIELDS = ['name', 'description', 'language', 'main_file', 'main_code', 'dependency_file', 'dependency_content', 'readme', 'example_file', 'example_code', 'metadata'];
+  const OPTIONAL_FIELDS = ['test_file', 'test_code'];
+
   // Try to extract JSON from markdown code blocks (```json ... ```)
   const jsonMarkdownMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
   if (jsonMarkdownMatch) {
     try {
-      console.log('[PARSER] Found JSON in markdown code block');
+      console.log('[PARSER] Found JSON in markdown code block (attempting parse)');
       const parsed = JSON.parse(jsonMarkdownMatch[1]);
-      if (parsed.name && parsed.main_code) {
+      const validation = validateSkillJSON(parsed, REQUIRED_FIELDS);
+      if (validation.valid) {
         console.log('[PARSER] ✅ Successfully parsed from markdown block');
         return parsed;
+      } else {
+        console.warn('[PARSER] ⚠️ Markdown JSON missing fields:', validation.missing);
       }
     } catch (e) {
       console.error('[PARSER] Failed to parse markdown block:', e.message);
@@ -49,23 +56,22 @@ function parseSkillOutput(text) {
     const jsonEnd = text.lastIndexOf('}');
     
     if (jsonStart === -1 || jsonEnd === -1) {
-      console.error('[PARSER] ❌ No JSON braces found');
+      console.error('[PARSER] ❌ No JSON braces found in response');
+      console.log('[PARSER] Response text preview:', text.substring(0, 200));
       return null;
     }
 
     const jsonString = text.substring(jsonStart, jsonEnd + 1);
-    console.log('[PARSER] Found JSON, length:', jsonString.length);
+    console.log('[PARSER] Extracted JSON substring, length:', jsonString.length);
     
     const parsed = JSON.parse(jsonString);
     console.log('[PARSER] ✅ JSON parsed successfully');
     
-    // Validate required fields
-    if (!parsed.name) {
-      console.error('[PARSER] ❌ Missing "name" field');
-      return null;
-    }
-    if (!parsed.main_code) {
-      console.error('[PARSER] ❌ Missing "main_code" field');
+    // Validate all required fields
+    const validation = validateSkillJSON(parsed, REQUIRED_FIELDS);
+    if (!validation.valid) {
+      console.error('[PARSER] ❌ Missing required fields:', validation.missing);
+      console.error('[PARSER] Validation report:', JSON.stringify(validation, null, 2));
       return null;
     }
     
@@ -73,9 +79,33 @@ function parseSkillOutput(text) {
     return parsed;
   } catch (e) {
     console.error('[PARSER] ❌ Failed to parse JSON:', e.message);
-    console.log('[PARSER] Response preview:', text.substring(0, 500));
+    console.log('[PARSER] Response preview (first 500 chars):', text.substring(0, 500));
+    console.log('[PARSER] Response preview (last 500 chars):', text.substring(Math.max(0, text.length - 500)));
     return null;
   }
+}
+
+function validateSkillJSON(obj, requiredFields) {
+  const validation = {
+    valid: true,
+    missing: [],
+    invalid: [],
+    present: []
+  };
+
+  for (const field of requiredFields) {
+    if (!(field in obj)) {
+      validation.missing.push(field);
+      validation.valid = false;
+    } else if (!obj[field]) {
+      validation.invalid.push({ field, value: obj[field] });
+      validation.valid = false;
+    } else {
+      validation.present.push(field);
+    }
+  }
+
+  return validation;
 }
 
 export function useSkillGenerator() {
@@ -140,21 +170,21 @@ Respond ONLY with valid JSON (no markdown, no code blocks):`;
         data = await response.json();
 
         if (data.content && data.content[0]?.text) {
-          const parsed = parseSkillOutput(data.content[0].text);
-          if (parsed && parsed.name && parsed.main_code) {
+          const responseText = data.content[0].text;
+          const parsed = parseSkillOutput(responseText);
+          if (parsed) {
             setSkill({ ...parsed, language });
             return true;
           } else {
-            const responseText = data.content[0].text;
             const debugInfo = {
               responseLength: responseText.length,
-              firstChars: responseText.substring(0, 300),
+              firstChars: responseText.substring(0, 200),
               hasJsonBraces: responseText.includes('{') && responseText.includes('}'),
-              parsed: parsed ? 'parsed but missing fields' : 'failed to parse'
+              parsed: parsed ? 'parsed but missing fields' : 'failed to parse JSON'
             };
             setError(makeError(
-              'Failed to parse module generation output. Response was malformed or missing required fields (name, main_code).',
-              `Debug info:\n${JSON.stringify(debugInfo, null, 2)}\n\nCheck browser console for detailed parser logs.`
+              '⚠️ Failed to parse skill generation output. The response was malformed or missing required JSON fields.',
+              `Debug info:\n${JSON.stringify(debugInfo, null, 2)}\n\n📋 Expected fields: name, description, language, main_file, main_code, dependency_file, dependency_content, readme, example_file, example_code, metadata\n\n🔍 Check browser console for detailed parser logs showing which fields are missing.`
             ));
           }
         } else if (data.error) {
@@ -190,19 +220,19 @@ Respond ONLY with valid JSON (no markdown, no code blocks):`;
         if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
           const responseText = data.candidates[0].content.parts[0].text;
           const parsed = parseSkillOutput(responseText);
-          if (parsed && parsed.name && parsed.main_code) {
+          if (parsed) {
             setSkill({ ...parsed, language });
             return true;
           } else {
             const debugInfo = {
               responseLength: responseText.length,
-              firstChars: responseText.substring(0, 300),
+              firstChars: responseText.substring(0, 200),
               hasJsonBraces: responseText.includes('{') && responseText.includes('}'),
-              parsed: parsed ? 'parsed but missing fields' : 'failed to parse'
+              parsed: parsed ? 'parsed but missing fields' : 'failed to parse JSON'
             };
             setError(makeError(
-              'Failed to parse module generation output. Response was malformed or missing required fields.',
-              `Debug info:\n${JSON.stringify(debugInfo, null, 2)}\n\nCheck browser console for detailed parser logs.`
+              '⚠️ Failed to parse skill generation output. The response was malformed or missing required JSON fields.',
+              `Debug info:\n${JSON.stringify(debugInfo, null, 2)}\n\n📋 Expected fields: name, description, language, main_file, main_code, dependency_file, dependency_content, readme, example_file, example_code, metadata\n\n🔍 Check browser console for detailed parser logs showing which fields are missing.`
             ));
           }
         } else if (data.error) {
@@ -238,19 +268,19 @@ Respond ONLY with valid JSON (no markdown, no code blocks):`;
         if (data.choices && data.choices[0]?.message?.content) {
           const responseText = data.choices[0].message.content;
           const parsed = parseSkillOutput(responseText);
-          if (parsed && parsed.name && parsed.main_code) {
+          if (parsed) {
             setSkill({ ...parsed, language });
             return true;
           } else {
             const debugInfo = {
               responseLength: responseText.length,
-              firstChars: responseText.substring(0, 300),
+              firstChars: responseText.substring(0, 200),
               hasJsonBraces: responseText.includes('{') && responseText.includes('}'),
-              parsed: parsed ? 'parsed but missing fields' : 'failed to parse'
+              parsed: parsed ? 'parsed but missing fields' : 'failed to parse JSON'
             };
             setError(makeError(
-              'Failed to parse module generation output. Response was malformed or missing required fields.',
-              `Debug info:\n${JSON.stringify(debugInfo, null, 2)}\n\nCheck browser console for detailed parser logs.`
+              '⚠️ Failed to parse skill generation output. The response was malformed or missing required JSON fields.',
+              `Debug info:\n${JSON.stringify(debugInfo, null, 2)}\n\n📋 Expected fields: name, description, language, main_file, main_code, dependency_file, dependency_content, readme, example_file, example_code, metadata\n\n🔍 Check browser console for detailed parser logs showing which fields are missing.`
             ));
           }
         } else if (data.error) {

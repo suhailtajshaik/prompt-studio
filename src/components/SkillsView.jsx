@@ -53,7 +53,9 @@ export default function SkillsView({ apiKeys, provider, model }) {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const canGenerate = input.trim() && !loading && !!apiKeys[provider];
+  // Button should be enabled if user has input, not currently loading
+  // API key can be provided by user or will use backend default
+  const canGenerate = input.trim() && !loading;
 
   return (
     <div className="space-y-6 sm:space-y-8">
