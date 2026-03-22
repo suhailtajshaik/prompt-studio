@@ -118,15 +118,15 @@ export default function SkillsView({ apiKeys, provider, model }) {
       {/* Error */}
       <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
-      {/* Smart Clarifications - Optional */}
-      {/* Disabled for now to keep UI clean and prevent button from hiding */}
-      {/* <AnimatePresence>
+      {/* Smart Clarifications */}
+      <AnimatePresence>
         {input.trim() && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
+            className="max-h-96 overflow-y-auto border border-border/40 rounded-xl p-4 bg-surface-alt/30"
           >
             <SmartClarifications
               description={input}
@@ -136,7 +136,7 @@ export default function SkillsView({ apiKeys, provider, model }) {
             />
           </motion.div>
         )}
-      </AnimatePresence> */}
+      </AnimatePresence>
 
       {/* Generate button */}
       <motion.button
