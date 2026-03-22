@@ -118,8 +118,9 @@ export default function SkillsView({ apiKeys, provider, model }) {
       {/* Error */}
       <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
-      {/* Smart Clarifications */}
-      <AnimatePresence>
+      {/* Smart Clarifications - Optional */}
+      {/* Disabled for now to keep UI clean and prevent button from hiding */}
+      {/* <AnimatePresence>
         {input.trim() && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -135,7 +136,7 @@ export default function SkillsView({ apiKeys, provider, model }) {
             />
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
       {/* Generate button */}
       <motion.button
