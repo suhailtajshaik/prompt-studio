@@ -3,7 +3,7 @@ import { AlertTriangle, Pen } from 'lucide-react';
 import { EXAMPLE_PROMPTS } from '../data/constants';
 import { analyzePrompt, getScoreClass } from '../data/analyzer';
 
-export default function PromptInput({ value, onChange }) {
+export default function PromptInput({ value, onChange, placeholder = 'Paste your prompt here...' }) {
   const ref = useRef(null);
   const analysis = analyzePrompt(value);
   const wordCount = value.split(/\s+/).filter(Boolean).length;
@@ -42,7 +42,7 @@ export default function PromptInput({ value, onChange }) {
       <textarea
         ref={ref}
         className="prompt-input text-[13px] sm:text-sm"
-        placeholder='Paste your prompt here...'
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         spellCheck={false}

@@ -1,4 +1,13 @@
 export const FRAMEWORKS = {
+  decode_intent: {
+    id: 'decode_intent',
+    name: 'Decode Intent',
+    color: '#ff6b9d',
+    tagline: 'Extract Intent → Clarify → Rewrite',
+    description: 'Analyzes unclear or rambling prompts to extract the true intent, then generates a clean rewritten version.',
+    fields: [],
+    isSpecialWorkflow: true,
+  },
   costar: {
     id: 'costar',
     name: 'COSTAR',
@@ -88,13 +97,6 @@ export const TECHNIQUES = [
     description: 'Ask the AI to generate or improve its own prompt. Self-referential optimization for complex use cases.',
     when: 'Prompt optimization, self-improvement',
   },
-  {
-    id: 'clarity',
-    name: 'Clarity Refine',
-    icon: '🔍',
-    description: 'Diagnoses vague or noisy prompts, strips garbage context, extracts real intent, and rebuilds with a clear thought process. Best for messy, contradictory, or unfocused prompts.',
-    when: 'Vague goals, mixed intent, noisy context',
-  },
 ];
 
 export const EXAMPLE_PROMPTS = [
@@ -183,3 +185,25 @@ Respond ONLY with valid JSON in this exact structure:
 }
 
 No markdown fences. No explanation. Pure JSON only.`;
+
+export const DECODE_INTENT_SYSTEM_PROMPT = `You are an expert prompt decoder. Your job is to analyze unclear, rambling, or poorly structured prompts and extract the user's true intent.
+
+You must respond with EXACTLY 3 sections, each clearly labeled and separated:
+
+1. **DECODED_INTENT:** One clear, concise sentence describing what the user actually wants to achieve. Strip all noise and focus on the core goal.
+
+2. **INTENT:** A brief labeled intent (2-4 words max) that categorizes the request. Examples: "Code Generation", "Writing Advice", "Analysis", "Creative Content", "Problem Solving", etc.
+
+3. **REWRITTEN_PROMPT:** A clean, well-structured prompt that the user could actually use with an AI. This should be clear, specific, and actionable. Include any necessary context that was implied or scattered in the original.
+
+Format your response EXACTLY like this:
+---
+DECODED_INTENT: [Your one-sentence summary of the actual goal]
+
+INTENT: [2-4 word category]
+
+REWRITTEN_PROMPT:
+[The improved prompt here, can be multiple lines, should be ready to use as-is]
+---
+
+Do not add any other text, explanations, or markdown formatting outside this structure.`;

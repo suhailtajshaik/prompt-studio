@@ -9,7 +9,7 @@ import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
-import AgentModeView from './components/AgentModeView';
+
 import ErrorBanner from './components/ErrorBanner';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import TransformingOverlay from './components/TransformingOverlay';
@@ -128,25 +128,6 @@ export default function App() {
                 frameworkId={framework}
                 techniqueIds={techniques}
                 onBack={() => setTab('build')}
-              />
-            </motion.div>
-          )}
-
-          {/* AGENTS TAB */}
-          {tab === 'agents' && (
-            <motion.div
-              key="agents"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <AgentModeView
-                provider={provider}
-                onProviderChange={setProvider}
-                model={model}
-                onModelChange={setModel}
-                apiKeys={apiKeys}
               />
             </motion.div>
           )}
