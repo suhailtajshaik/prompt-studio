@@ -110,6 +110,33 @@ export default function SkillsView({ apiKeys, provider, model }) {
         />
       </div>
 
+      {/* Example Prompts */}
+      {!input.trim() && (
+        <div className="space-y-2">
+          <p className="text-xs text-text-tertiary font-medium">Quick examples:</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {[
+              'A REST API client wrapper for handling authentication and rate limiting',
+              'A CLI tool for batch image resizing and format conversion',
+              'A data validation library for form inputs and configuration files',
+              'A file parser that converts CSV to JSON with schema validation'
+            ].map((example, idx) => (
+              <motion.button
+                key={idx}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setInput(example)}
+                className="text-left p-2.5 rounded-lg border border-border/40 bg-surface-alt/50 hover:bg-surface-alt hover:border-accent/30 transition-all"
+              >
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {example}
+                </p>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Error */}
       <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 

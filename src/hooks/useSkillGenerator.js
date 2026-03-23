@@ -28,9 +28,10 @@ function parseSkillOutput(text) {
 
   console.log('[PARSER] Starting parse, text length:', text.length);
 
-  // Required fields that must be present in the response
-  const REQUIRED_FIELDS = ['name', 'description', 'language', 'main_file', 'main_code', 'dependency_file', 'dependency_content', 'readme', 'example_file', 'example_code', 'metadata'];
-  const OPTIONAL_FIELDS = ['test_file', 'test_code'];
+  // Minimal required fields - only these MUST be present
+  const REQUIRED_FIELDS = ['name', 'main_code'];
+  // Nice-to-have fields
+  const OPTIONAL_FIELDS = ['description', 'language', 'main_file', 'dependency_file', 'dependency_content', 'readme', 'example_file', 'example_code', 'test_file', 'test_code', 'metadata'];
 
   // Try to extract JSON from markdown code blocks (```json ... ```)
   const jsonMarkdownMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
