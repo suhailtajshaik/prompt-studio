@@ -4,10 +4,7 @@ import { Wand2, Download, Copy, Check, Code2 } from 'lucide-react';
 import PromptInput from './PromptInput';
 import ErrorBanner from './ErrorBanner';
 import SkillPreview from './SkillPreview';
-import SmartClarifications from './SmartClarifications';
 import { useSkillGenerator } from '../hooks/useSkillGenerator';
-import { useSmartClarifications } from '../hooks/useSmartClarifications';
-import { buildClarificationContext } from '../data/smartClarifications';
 import { downloadZip, downloadMd } from '../utils/skillDownloader';
 
 const pageVariants = {
@@ -31,12 +28,10 @@ export default function SkillsView({ apiKeys, provider, model }) {
   const [copied, setCopied] = useState(null); // 'zip', 'md', or null
 
   const { skill, loading, error, generate, reset } = useSkillGenerator();
-  const { answers, answerQuestion, clearAnswers } = useSmartClarifications();
 
   const handleGenerate = async () => {
     if (!input.trim()) return;
-    const clarificationContext = buildClarificationContext(answers);
-    await generate(input, language, provider, model, apiKeys[provider], clarificationContext);
+    await generate(input, language, provider, model, apiKeys[provider]);
   };
 
   const handleDownloadZip = async () => {
@@ -118,27 +113,7 @@ export default function SkillsView({ apiKeys, provider, model }) {
       {/* Error */}
       <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
-      {/* Smart Clarifications - Disabled (only triggers for specific keywords) */}
-      {/* 
-      <AnimatePresence>
-        {input.trim() && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="max-h-96 overflow-y-auto"
-          >
-            <SmartClarifications
-              description={input}
-              answers={answers}
-              onAnswer={answerQuestion}
-              onClear={clearAnswers}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      */}
+
 
       {/* Generate button */}
       <motion.button
