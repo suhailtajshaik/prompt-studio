@@ -9,7 +9,7 @@ import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
-import SkillsView from './components/SkillsView';
+
 import ErrorBanner from './components/ErrorBanner';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import TransformingOverlay from './components/TransformingOverlay';
@@ -128,23 +128,6 @@ export default function App() {
                 frameworkId={framework}
                 techniqueIds={techniques}
                 onBack={() => setTab('build')}
-              />
-            </motion.div>
-          )}
-
-          {/* SKILLS TAB */}
-          {tab === 'skills' && (
-            <motion.div
-              key="skills"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <SkillsView
-                provider={provider}
-                model={model}
-                apiKeys={apiKeys}
               />
             </motion.div>
           )}
