@@ -1,20 +1,22 @@
 import { motion } from 'framer-motion';
 import { ExternalLink, BookOpen, Zap } from 'lucide-react';
 import { FRAMEWORKS, TECHNIQUES } from '../data/constants';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
 
 const FRAMEWORK_COLORS = {
-  costar: '#00B894',
-  sixstep: '#F39C12',
-  markdown: '#A855F7',
+  costar: '#059669',
+  sixstep: '#D97706',
+  markdown: '#7C3AED',
 };
 
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
+  show: { transition: { staggerChildren: 0.06 } },
 };
 const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export default function LearnView() {
@@ -23,85 +25,87 @@ export default function LearnView() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-4 sm:space-y-6"
+      className="space-y-4"
     >
       {/* Frameworks */}
       {Object.values(FRAMEWORKS).map((fw) => {
         const color = FRAMEWORK_COLORS[fw.id];
         return (
-          <motion.div key={fw.id} variants={item} className="card p-5 sm:p-7">
-            <div className="flex items-center gap-2.5 sm:gap-3.5 mb-3 sm:mb-4">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
-                   style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
-                <BookOpen size={16} className="sm:hidden" style={{ color }} />
-                <BookOpen size={18} className="hidden sm:block" style={{ color }} />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-base sm:text-lg font-display font-bold text-text">{fw.name}</h3>
-                <p className="text-[10px] sm:text-xs text-text-tertiary font-mono mt-0.5 truncate">{fw.tagline}</p>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed mb-4 sm:mb-5 font-body">
-              {fw.description}
-            </p>
-
-            <div className="flex flex-wrap gap-1.5 sm:gap-2.5">
-              {fw.fields.map((f) => (
-                <div
-                  key={f.key}
-                  className="px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-body border"
-                  style={{
-                    background: `${color}08`,
-                    borderColor: `${color}20`,
-                  }}
-                >
-                  <span className="font-semibold" style={{ color }}>{f.label}</span>
-                  <span className="text-text-tertiary ml-1.5 sm:ml-2 hidden xs:inline">{f.hint}</span>
+          <motion.div key={fw.id} variants={item}>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: `${color}12`, border: `1px solid ${color}25` }}
+                  >
+                    <BookOpen size={16} style={{ color }} />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">{fw.name}</CardTitle>
+                    <p className="text-xs text-text-tertiary font-mono mt-0.5">{fw.tagline}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  {fw.description}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {fw.fields.map((f) => (
+                    <div
+                      key={f.key}
+                      className="px-3 py-2 rounded-lg text-xs border"
+                      style={{ background: `${color}06`, borderColor: `${color}18` }}
+                    >
+                      <span className="font-semibold" style={{ color }}>{f.label}</span>
+                      <span className="text-text-tertiary ml-2 hidden sm:inline">{f.hint}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         );
       })}
 
       {/* Techniques */}
-      <motion.div variants={item} className="card p-5 sm:p-7">
-        <div className="flex items-center gap-2.5 sm:gap-3.5 mb-4 sm:mb-6">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
-               style={{ background: 'var(--gradient-primary)' }}>
-            <Zap size={16} className="text-white sm:hidden" />
-            <Zap size={18} className="text-white hidden sm:block" />
-          </div>
-          <h3 className="text-base sm:text-lg font-display font-bold text-text">Prompting Techniques</h3>
-        </div>
-        <div className="space-y-2.5 sm:space-y-3">
-          {TECHNIQUES.map((tech) => (
-            <div
-              key={tech.id}
-              className="flex items-start gap-3 sm:gap-4 p-3.5 sm:p-5 rounded-xl bg-surface-alt/60 border border-border/50
-                         hover:bg-surface-hover hover:border-border-focus transition-all duration-200"
-            >
-              <span className="text-xl sm:text-2xl mt-0.5 shrink-0">{tech.icon}</span>
-              <div className="min-w-0">
-                <h4 className="font-semibold text-xs sm:text-sm text-text font-display mb-1 sm:mb-1.5">
-                  {tech.name}
-                </h4>
-                <p className="text-[10px] sm:text-xs text-text-secondary leading-relaxed font-body">
-                  {tech.description}
-                </p>
-                <span className="inline-block mt-2 sm:mt-2.5 text-[9px] sm:text-[11px] font-mono text-accent-text bg-accent-light px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border border-accent/15">
-                  Best for: {tech.when}
-                </span>
+      <motion.div variants={item}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
+                <Zap size={16} className="text-white" />
               </div>
+              <CardTitle className="text-base">Prompting Techniques</CardTitle>
             </div>
-          ))}
-        </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {TECHNIQUES.map((tech) => (
+              <div
+                key={tech.id}
+                className="flex items-start gap-3 p-4 rounded-lg bg-surface-alt border border-border
+                           hover:bg-surface-hover hover:border-border-focus transition-all duration-150"
+              >
+                <span className="text-xl mt-0.5 shrink-0">{tech.icon}</span>
+                <div>
+                  <h4 className="font-semibold text-sm text-text mb-1">{tech.name}</h4>
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    {tech.description}
+                  </p>
+                  <Badge variant="outline" className="mt-2 text-[11px] font-mono">
+                    Best for: {tech.when}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Source Attribution */}
-      <motion.div variants={item} className="text-center py-4 sm:py-6">
-        <p className="text-[10px] sm:text-xs text-text-tertiary/70 leading-relaxed">
+      <motion.div variants={item} className="text-center py-4">
+        <p className="text-xs text-text-tertiary leading-relaxed">
           Frameworks: COSTAR, 6-Step Prompt Checklist, Markdown Prompting.
           Techniques based on research from{' '}
           <a
@@ -110,7 +114,7 @@ export default function LearnView() {
             rel="noreferrer"
             className="text-accent-text hover:underline inline-flex items-center gap-1"
           >
-            promptingguide.ai <ExternalLink size={9} />
+            promptingguide.ai <ExternalLink size={10} />
           </a>
         </p>
       </motion.div>
