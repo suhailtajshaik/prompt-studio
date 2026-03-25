@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
-import { ExternalLink, BookOpen, Zap } from 'lucide-react';
+import { ExternalLink, BookOpen, Zap, Brain, ArrowRight } from 'lucide-react';
 import { FRAMEWORKS, TECHNIQUES } from '../data/constants';
+import { INTENT_CATEGORIES } from '../data/intents';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 
 const FRAMEWORK_COLORS = {
+  decode_intent: '#E11D48',
   costar: '#059669',
   sixstep: '#D97706',
   markdown: '#7C3AED',
@@ -25,11 +27,66 @@ export default function LearnView() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-4"
+      className="space-y-6"
     >
+      {/* Intent Categories */}
+      <motion.div variants={item}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
+                <Brain size={16} className="text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Intent Categories</CardTitle>
+                <p className="text-xs text-text-tertiary mt-0.5">
+                  We auto-detect your intent and select the best framework + techniques
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {INTENT_CATEGORIES.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="flex items-start gap-3 p-3 rounded-lg border border-border bg-surface-alt/50
+                             hover:bg-surface-hover hover:border-border-focus transition-all duration-150"
+                >
+                  <span className="text-xl mt-0.5 shrink-0">{cat.icon}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-sm text-text">{cat.label}</h4>
+                    </div>
+                    <p className="text-[11px] text-text-tertiary leading-relaxed mb-2">
+                      {cat.description}
+                    </p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary font-mono">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {FRAMEWORKS[cat.framework]?.name}
+                      </Badge>
+                      <ArrowRight size={8} className="opacity-40" />
+                      {cat.techniques.map((tid) => {
+                        const tech = TECHNIQUES.find((t) => t.id === tid);
+                        return tech ? (
+                          <Badge key={tid} variant="outline" className="text-[10px] px-1.5 py-0">
+                            {tech.name}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Frameworks */}
       {Object.values(FRAMEWORKS).map((fw) => {
         const color = FRAMEWORK_COLORS[fw.id];
+        if (!color) return null;
         return (
           <motion.div key={fw.id} variants={item}>
             <Card>

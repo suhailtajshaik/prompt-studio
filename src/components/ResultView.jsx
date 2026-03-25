@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Copy, Check, ArrowLeft, Download, Sparkles, TrendingUp, FileText, BarChart3 } from 'lucide-react';
+import { Copy, Check, Download, Sparkles, TrendingUp, FileText, BarChart3, RotateCcw } from 'lucide-react';
 import { FRAMEWORKS, TECHNIQUES } from '../data/constants';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 
-export default function ResultView({ result, badPrompt, frameworkId, techniqueIds, onBack }) {
+export default function ResultView({ result, badPrompt, frameworkId, techniqueIds, intent, onNewPrompt }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const fw = FRAMEWORKS[frameworkId];
   const isDecodeIntent = fw?.isSpecialWorkflow === true;
-  const techNames = techniqueIds
+  const techNames = (techniqueIds || [])
     .map((id) => TECHNIQUES.find((t) => t.id === id)?.name)
     .filter(Boolean);
 
@@ -43,11 +43,12 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
   };
 
   const handleDownload = () => {
-    const blob = new Blob([result], { type: 'text/plain' });
+    const text = isDecodeIntent && decodeIntentParts ? decodeIntentParts.rewrittenPrompt : result;
+    const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'prompt-result.txt';
+    a.download = 'optimized-prompt.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -68,9 +69,12 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
     </Button>
   );
 
+  // Decode Intent result layout
   if (isDecodeIntent && decodeIntentParts) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 pt-4">
+        <Separator />
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2.5">
@@ -107,17 +111,20 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
           </Card>
         ))}
 
-        <Button variant="outline" className="w-full gap-2" onClick={onBack}>
-          <ArrowLeft size={14} />
-          Back to Editor
+        <Button variant="outline" className="w-full gap-2" onClick={onNewPrompt}>
+          <RotateCcw size={14} />
+          Start New Prompt
         </Button>
       </div>
     );
   }
 
+  // Standard result layout
   return (
-    <div className="space-y-4">
-      {/* Improved Prompt Card */}
+    <div className="space-y-4 pt-4">
+      <Separator />
+
+      {/* Optimized Prompt Card */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -126,9 +133,21 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
                 <Sparkles size={14} className="text-white" />
               </div>
               <div>
-                <CardTitle>Improved Prompt</CardTitle>
+                <CardTitle>Optimized Prompt</CardTitle>
                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                  <Badge variant="default" className="text-[10px]">{fw.name}</Badge>
+                  {intent?.primary && (
+                    <Badge
+                      className="text-[10px]"
+                      style={{
+                        backgroundColor: `${intent.primary.color}15`,
+                        color: intent.primary.color,
+                        borderColor: `${intent.primary.color}30`,
+                      }}
+                    >
+                      {intent.primary.icon} {intent.primary.label}
+                    </Badge>
+                  )}
+                  {fw && <Badge variant="outline" className="text-[10px]">{fw.name}</Badge>}
                   {techNames.map((name) => (
                     <Badge key={name} variant="outline" className="text-[10px]">{name}</Badge>
                   ))}
@@ -155,17 +174,17 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
       <div className="grid grid-cols-3 gap-3">
         {[
           { icon: FileText, label: 'Original', value: badWordCount, unit: 'words', color: 'text-danger' },
-          { icon: Sparkles, label: 'Improved', value: goodWordCount, unit: 'words', color: 'text-success' },
+          { icon: Sparkles, label: 'Optimized', value: goodWordCount, unit: 'words', color: 'text-success' },
           { icon: TrendingUp, label: 'Expansion', value: `+${improvement}%`, unit: 'richer', color: 'text-accent' },
         ].map(({ icon: Icon, label, value, unit, color }) => (
           <Card key={label} className="text-center">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                <Icon size={13} className={color} />
-                <span className="text-[11px] text-text-tertiary uppercase tracking-wider font-mono">{label}</span>
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Icon size={12} className={color} />
+                <span className="text-[10px] text-text-tertiary uppercase tracking-wider font-mono">{label}</span>
               </div>
-              <div className={`text-2xl font-bold ${color}`}>{value}</div>
-              <div className="text-[11px] text-text-tertiary mt-0.5">{unit}</div>
+              <div className={`text-xl font-bold ${color}`}>{value}</div>
+              <div className="text-[10px] text-text-tertiary mt-0.5">{unit}</div>
             </CardContent>
           </Card>
         ))}
@@ -173,31 +192,29 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
 
       {/* Before vs After */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent-light">
-              <BarChart3 size={14} className="text-accent" />
-            </div>
-            <CardTitle>Before vs After</CardTitle>
+            <BarChart3 size={14} className="text-accent" />
+            <CardTitle className="text-sm">Before vs After</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-danger font-mono mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-danger" />
+              <div className="text-[10px] uppercase tracking-widest text-danger font-mono mb-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-danger" />
                 Before
               </div>
-              <div className="p-4 rounded-lg bg-danger-light border border-danger/15 font-mono text-[13px] text-text-secondary leading-relaxed break-words">
+              <div className="p-3 rounded-lg bg-danger-light border border-danger/15 font-mono text-xs text-text-secondary leading-relaxed break-words">
                 {badPrompt}
               </div>
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-accent-text font-mono mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-accent" />
+              <div className="text-[10px] uppercase tracking-widest text-accent-text font-mono mb-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 After
               </div>
-              <div className="p-4 rounded-lg bg-accent-light border border-accent/15 font-mono text-[13px] text-accent-text leading-relaxed max-h-[200px] overflow-y-auto break-words">
+              <div className="p-3 rounded-lg bg-accent-light border border-accent/15 font-mono text-xs text-accent-text leading-relaxed max-h-[180px] overflow-y-auto break-words">
                 {result.slice(0, 500)}{result.length > 500 ? '...' : ''}
               </div>
             </div>
@@ -205,9 +222,9 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="w-full gap-2" onClick={onBack}>
-        <ArrowLeft size={14} />
-        Back to Editor
+      <Button variant="outline" className="w-full gap-2" onClick={onNewPrompt}>
+        <RotateCcw size={14} />
+        Start New Prompt
       </Button>
     </div>
   );

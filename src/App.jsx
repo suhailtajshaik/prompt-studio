@@ -1,20 +1,18 @@
 import { useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import Sidebar from './components/Sidebar';
+import Navbar from './components/Navbar';
 import PromptInput from './components/PromptInput';
-import FrameworkPicker from './components/FrameworkPicker';
-import TechniquePicker from './components/TechniquePicker';
 import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
-
 import ErrorBanner from './components/ErrorBanner';
 import ApiKeyBanner from './components/ApiKeyBanner';
 import TransformingOverlay from './components/TransformingOverlay';
 import { useTransform } from './hooks/useTransform';
 import { useTheme } from './hooks/useTheme';
 import { useApiKeys } from './hooks/useApiKeys';
+import { useIntentDetection } from './hooks/useIntentDetection';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -22,36 +20,22 @@ const pageVariants = {
   exit: { opacity: 0, y: -4, transition: { duration: 0.15 } },
 };
 
-const PAGE_TITLES = {
-  build: { title: 'Build', subtitle: 'Transform your prompts with AI-powered frameworks' },
-  result: { title: 'Result', subtitle: 'Your transformed prompt is ready' },
-  learn: { title: 'Learn', subtitle: 'Explore frameworks and prompting techniques' },
-  settings: { title: 'Settings', subtitle: 'Configure providers, models, and API keys' },
-};
-
 export default function App() {
-  const [tab, setTab] = useState('build');
+  const [page, setPage] = useState('studio');
   const [badPrompt, setBadPrompt] = useState('');
-  const [framework, setFramework] = useState('costar');
-  const [techniques, setTechniques] = useState(['zero-shot']);
   const [dark, setDark] = useTheme();
 
   const [provider, setProvider] = useState('anthropic');
   const [model, setModel] = useState('claude-sonnet-4-6');
   const { apiKeys, setApiKeys, clearAllKeys } = useApiKeys();
 
-  const { result, loading, error, transform, reset } = useTransform();
-
-  const toggleTechnique = useCallback((id) => {
-    setTechniques((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
-  }, []);
+  const { result, loading, error, usedConfig, autoTransform, reset } = useTransform();
+  const intent = useIntentDetection(badPrompt);
 
   const handleTransform = useCallback(async () => {
-    const success = await transform(badPrompt, framework, techniques, provider, model, apiKeys[provider]);
-    if (success) setTab('result');
-  }, [badPrompt, framework, techniques, provider, model, apiKeys, transform]);
+    const success = await autoTransform(badPrompt, intent, provider, model, apiKeys[provider]);
+    // Result appears inline - no page switch needed
+  }, [badPrompt, intent, provider, model, apiKeys, autoTransform]);
 
   const handleKeyDown = useCallback((e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -61,135 +45,142 @@ export default function App() {
     }
   }, [badPrompt, loading, handleTransform]);
 
-  const currentPage = PAGE_TITLES[tab] || PAGE_TITLES.build;
+  const handleNewPrompt = useCallback(() => {
+    setBadPrompt('');
+    reset();
+  }, [reset]);
 
   return (
     <div className="min-h-screen bg-bg" onKeyDown={handleKeyDown}>
-      {/* Sidebar */}
-      <Sidebar
-        active={tab}
-        onChange={setTab}
-        hasResult={!!result}
+      <Navbar
+        active={page}
+        onChange={setPage}
         dark={dark}
         onToggleTheme={() => setDark((d) => !d)}
       />
 
-      {/* Main content area */}
-      <main className="md:pl-[240px] min-h-screen pb-20 md:pb-0 transition-all duration-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {/* Page header */}
-          <header className="mb-6 sm:mb-8">
-            <h1 className="text-xl sm:text-2xl font-semibold text-text tracking-tight">
-              {currentPage.title}
-            </h1>
-            <p className="text-sm text-text-tertiary mt-1">
-              {currentPage.subtitle}
-            </p>
-          </header>
-
-          <AnimatePresence mode="wait">
-            {/* BUILD TAB */}
-            {tab === 'build' && (
-              <motion.div
-                key="build"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="space-y-5"
-              >
-                <PromptInput value={badPrompt} onChange={setBadPrompt} />
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                  <FrameworkPicker selected={framework} onSelect={setFramework} />
-                  <TechniquePicker selected={techniques} onToggle={toggleTechnique} />
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        <AnimatePresence mode="wait">
+          {/* STUDIO PAGE */}
+          {page === 'studio' && (
+            <motion.div
+              key="studio"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="space-y-5"
+            >
+              {/* Hero text - only when no result */}
+              {!result && (
+                <div className="text-center mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-text tracking-tight">
+                    Describe what you need
+                  </h1>
+                  <p className="text-sm text-text-tertiary mt-2 max-w-lg mx-auto">
+                    Type, speak, or upload a document. We'll detect your intent and generate
+                    an optimized, ready-to-use prompt automatically.
+                  </p>
                 </div>
+              )}
 
-                <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
+              <PromptInput
+                value={badPrompt}
+                onChange={setBadPrompt}
+                intent={intent}
+              />
 
-                {!apiKeys[provider] && (
-                  <ApiKeyBanner
-                    provider={provider}
-                    onAddKey={(key) => setApiKeys({ ...apiKeys, [provider]: key })}
-                    onGoToSettings={() => setTab('settings')}
-                  />
-                )}
+              <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
-                <TransformButton
-                  onClick={handleTransform}
-                  disabled={!badPrompt.trim() || loading || !apiKeys[provider]}
-                  loading={loading}
-                  hasApiKey={!!apiKeys[provider]}
-                />
-
-                {result && !loading && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => setTab('result')}
-                    className="w-full text-center py-3 text-sm font-medium
-                             text-accent-text hover:text-accent-hover transition-colors"
-                  >
-                    Prompt ready — click to view result
-                  </motion.button>
-                )}
-              </motion.div>
-            )}
-
-            {/* RESULT TAB */}
-            {tab === 'result' && result && (
-              <motion.div
-                key="result"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                <ResultView
-                  result={result}
-                  badPrompt={badPrompt}
-                  frameworkId={framework}
-                  techniqueIds={techniques}
-                  onBack={() => setTab('build')}
-                />
-              </motion.div>
-            )}
-
-            {/* LEARN TAB */}
-            {tab === 'learn' && (
-              <motion.div
-                key="learn"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                <LearnView />
-              </motion.div>
-            )}
-
-            {/* SETTINGS TAB */}
-            {tab === 'settings' && (
-              <motion.div
-                key="settings"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                <SettingsView
+              {!apiKeys[provider] && (
+                <ApiKeyBanner
                   provider={provider}
-                  onProviderChange={setProvider}
-                  model={model}
-                  onModelChange={setModel}
-                  apiKeys={apiKeys}
-                  onApiKeysChange={setApiKeys}
-                  onClearAllKeys={clearAllKeys}
+                  onAddKey={(key) => setApiKeys({ ...apiKeys, [provider]: key })}
+                  onGoToSettings={() => setPage('settings')}
                 />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              )}
+
+              <TransformButton
+                onClick={handleTransform}
+                disabled={!badPrompt.trim() || loading || !apiKeys[provider]}
+                loading={loading}
+                hasApiKey={!!apiKeys[provider]}
+                intent={intent}
+              />
+
+              {/* Inline result */}
+              <AnimatePresence>
+                {result && !loading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <ResultView
+                      result={result}
+                      badPrompt={badPrompt}
+                      frameworkId={usedConfig?.frameworkId}
+                      techniqueIds={usedConfig?.techniqueIds || []}
+                      intent={intent}
+                      onNewPrompt={handleNewPrompt}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          {/* LEARN PAGE */}
+          {page === 'learn' && (
+            <motion.div
+              key="learn"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <header className="mb-6">
+                <h1 className="text-xl sm:text-2xl font-semibold text-text tracking-tight">
+                  Learn
+                </h1>
+                <p className="text-sm text-text-tertiary mt-1">
+                  Explore frameworks, techniques, and intent categories
+                </p>
+              </header>
+              <LearnView />
+            </motion.div>
+          )}
+
+          {/* SETTINGS PAGE */}
+          {page === 'settings' && (
+            <motion.div
+              key="settings"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <header className="mb-6">
+                <h1 className="text-xl sm:text-2xl font-semibold text-text tracking-tight">
+                  Settings
+                </h1>
+                <p className="text-sm text-text-tertiary mt-1">
+                  Configure providers, models, and API keys
+                </p>
+              </header>
+              <SettingsView
+                provider={provider}
+                onProviderChange={setProvider}
+                model={model}
+                onModelChange={setModel}
+                apiKeys={apiKeys}
+                onApiKeysChange={setApiKeys}
+                onClearAllKeys={clearAllKeys}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <AnimatePresence>
