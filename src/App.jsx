@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import PromptInput from './components/PromptInput';
+import AdvancedControls from './components/AdvancedControls';
 import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
@@ -29,13 +30,49 @@ export default function App() {
   const [model, setModel] = useState('claude-sonnet-4-6');
   const { apiKeys, setApiKeys, clearAllKeys } = useApiKeys();
 
-  const { result, loading, error, usedConfig, autoTransform, reset } = useTransform();
+  const { result, loading, error, usedConfig, transform, autoTransform, reset } = useTransform();
   const intent = useIntentDetection(badPrompt);
 
+  // Advanced mode: manual framework + technique overrides
+  const [manualFramework, setManualFramework] = useState(null);
+  const [manualTechniques, setManualTechniques] = useState(null);
+
+  // Sync auto-detected values as defaults when intent changes (only if not overridden)
+  const autoFramework = intent?.primary?.framework || 'costar';
+  const autoTechniques = intent?.primary?.techniques || ['zero-shot'];
+
+  // Effective values: manual overrides take priority over auto-detected
+  const isOverridden = manualFramework !== null || manualTechniques !== null;
+  const effectiveFramework = manualFramework ?? autoFramework;
+  const effectiveTechniques = manualTechniques ?? autoTechniques;
+
+  const handleFrameworkChange = useCallback((id) => {
+    setManualFramework(id);
+  }, []);
+
+  const handleTechniqueToggle = useCallback((id) => {
+    setManualTechniques((prev) => {
+      const current = prev ?? autoTechniques;
+      return current.includes(id)
+        ? current.filter((t) => t !== id)
+        : [...current, id];
+    });
+  }, [autoTechniques]);
+
+  const handleResetToAuto = useCallback(() => {
+    setManualFramework(null);
+    setManualTechniques(null);
+  }, []);
+
   const handleTransform = useCallback(async () => {
-    const success = await autoTransform(badPrompt, intent, provider, model, apiKeys[provider]);
-    // Result appears inline - no page switch needed
-  }, [badPrompt, intent, provider, model, apiKeys, autoTransform]);
+    if (isOverridden) {
+      // Use manual selections
+      await transform(badPrompt, effectiveFramework, effectiveTechniques, provider, model, apiKeys[provider]);
+    } else {
+      // Use auto-mode
+      await autoTransform(badPrompt, intent, provider, model, apiKeys[provider]);
+    }
+  }, [badPrompt, intent, provider, model, apiKeys, transform, autoTransform, isOverridden, effectiveFramework, effectiveTechniques]);
 
   const handleKeyDown = useCallback((e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -48,7 +85,8 @@ export default function App() {
   const handleNewPrompt = useCallback(() => {
     setBadPrompt('');
     reset();
-  }, [reset]);
+    handleResetToAuto();
+  }, [reset, handleResetToAuto]);
 
   return (
     <div className="min-h-screen bg-bg" onKeyDown={handleKeyDown}>
@@ -90,6 +128,17 @@ export default function App() {
                 intent={intent}
               />
 
+              {/* Advanced controls */}
+              <AdvancedControls
+                framework={effectiveFramework}
+                onFrameworkChange={handleFrameworkChange}
+                techniques={effectiveTechniques}
+                onTechniqueToggle={handleTechniqueToggle}
+                intent={intent}
+                isOverridden={isOverridden}
+                onResetToAuto={handleResetToAuto}
+              />
+
               <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
               {!apiKeys[provider] && (
@@ -106,6 +155,8 @@ export default function App() {
                 loading={loading}
                 hasApiKey={!!apiKeys[provider]}
                 intent={intent}
+                isOverridden={isOverridden}
+                framework={effectiveFramework}
               />
 
               {/* Inline result */}

@@ -1,8 +1,9 @@
-import { Zap, KeyRound, Sparkles } from 'lucide-react';
+import { Sparkles, KeyRound, SlidersHorizontal } from 'lucide-react';
+import { FRAMEWORKS } from '../data/constants';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 
-export default function TransformButton({ onClick, disabled, loading, hasApiKey, intent }) {
+export default function TransformButton({ onClick, disabled, loading, hasApiKey, intent, isOverridden, framework }) {
   const needsKey = !hasApiKey;
 
   if (needsKey) {
@@ -19,6 +20,16 @@ export default function TransformButton({ onClick, disabled, loading, hasApiKey,
   }
 
   const intentLabel = intent?.primary?.label;
+  const fw = FRAMEWORKS[framework];
+
+  let label;
+  if (isOverridden && fw) {
+    label = `Optimize with ${fw.name}`;
+  } else if (intentLabel) {
+    label = `Optimize for ${intentLabel}`;
+  } else {
+    label = 'Optimize Prompt';
+  }
 
   return (
     <Button
@@ -36,13 +47,8 @@ export default function TransformButton({ onClick, disabled, loading, hasApiKey,
         </>
       ) : (
         <>
-          <Sparkles size={16} />
-          <span>
-            {intentLabel
-              ? `Optimize for ${intentLabel}`
-              : 'Optimize Prompt'
-            }
-          </span>
+          {isOverridden ? <SlidersHorizontal size={16} /> : <Sparkles size={16} />}
+          <span>{label}</span>
           <kbd className="ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/15 border border-white/20 hidden md:inline">
             {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
           </kbd>
