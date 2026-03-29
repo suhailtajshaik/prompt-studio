@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { FRAMEWORKS, TECHNIQUES, SYSTEM_PROMPT, DECODE_INTENT_SYSTEM_PROMPT } from '../data/constants';
+import { FRAMEWORKS, TECHNIQUES, SYSTEM_PROMPT, DECODE_INTENT_SYSTEM_PROMPT, AUTO_MODE_SYSTEM_PROMPT } from '../data/constants';
+import { INTENT_CATEGORIES } from '../data/intents';
 
 const PROVIDER_LABELS = {
   anthropic: 'Anthropic',
@@ -15,8 +16,9 @@ export function useTransform() {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [usedConfig, setUsedConfig] = useState(null);
 
-  const transform = useCallback(async (badPrompt, frameworkId, techniqueIds, provider = 'anthropic', model = 'claude-3-7-sonnet-20250219', apiKey) => {
+  const transform = useCallback(async (badPrompt, frameworkId, techniqueIds, provider = 'anthropic', model = 'claude-sonnet-4-6', apiKey) => {
     if (!badPrompt.trim()) return;
 
     setLoading(true);
@@ -54,6 +56,9 @@ Generate the improved prompt now.`;
       systemPrompt = SYSTEM_PROMPT;
     }
 
+    // Store the config used for this transform
+    setUsedConfig({ frameworkId, techniqueIds });
+
     const label = PROVIDER_LABELS[provider] || provider;
 
     try {
@@ -74,7 +79,7 @@ Generate the improved prompt now.`;
           method: 'POST',
           headers,
           body: JSON.stringify({
-            model: model || 'claude-3-7-sonnet-20250219',
+            model: model || 'claude-sonnet-4-6',
             max_tokens: 1500,
             system: systemPrompt,
             messages: [{ role: 'user', content: userMessage }],
@@ -174,10 +179,24 @@ Generate the improved prompt now.`;
     }
   }, []);
 
+  /**
+   * Auto-mode transform: uses detected intent to select framework + techniques.
+   */
+  const autoTransform = useCallback(async (badPrompt, intent, provider, model, apiKey) => {
+    if (!intent) {
+      // Fallback: use decode_intent workflow
+      return transform(badPrompt, 'decode_intent', [], provider, model, apiKey);
+    }
+
+    const { framework, techniques } = intent.primary;
+    return transform(badPrompt, framework, techniques, provider, model, apiKey);
+  }, [transform]);
+
   const reset = useCallback(() => {
     setResult('');
     setError(null);
+    setUsedConfig(null);
   }, []);
 
-  return { result, loading, error, transform, reset };
+  return { result, loading, error, usedConfig, transform, autoTransform, reset };
 }

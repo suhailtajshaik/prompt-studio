@@ -1,49 +1,67 @@
-import { Zap, KeyRound } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { FRAMEWORKS } from '../data/constants';
+import { cn } from '@/lib/utils';
 
-export default function TransformButton({ onClick, disabled, loading, hasApiKey }) {
-  const needsKey = !hasApiKey;
+export default function TransformButton({ onClick, disabled, loading, hasApiKey, intent, isOverridden, framework }) {
+  if (!hasApiKey) return null;
+
+  const intentLabel = intent?.primary?.label;
+  const fw = FRAMEWORKS[framework];
+
+  let label;
+  if (isOverridden && fw) {
+    label = `Optimize with ${fw.name}`;
+  } else if (intentLabel) {
+    label = `Optimize for ${intentLabel}`;
+  } else {
+    label = 'Optimize Prompt';
+  }
 
   return (
-    <button
+    <motion.button
       onClick={onClick}
-      disabled={disabled && !needsKey}
-      className={`
-        w-full flex items-center justify-center gap-2.5 sm:gap-3
-        py-3.5 sm:py-4 px-6 sm:px-8 rounded-xl text-sm sm:text-base font-semibold font-body
-        transition-all duration-200 relative overflow-hidden
-        ${needsKey
-          ? 'bg-surface-alt text-text-tertiary border border-border cursor-default'
-          : disabled
-            ? 'bg-surface-alt text-text-tertiary border border-border cursor-not-allowed'
-            : 'text-white shadow-accent hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]'
-        }
-      `}
-      style={!disabled && !needsKey ? { background: 'var(--gradient-primary)' } : undefined}
-    >
-      {needsKey ? (
-        <>
-          <KeyRound size={16} className="text-text-tertiary" />
-          <span className="text-sm sm:text-base">Add API key above to transform</span>
-        </>
-      ) : loading ? (
-        <>
-          <div className="spinner" />
-          <span className="relative text-sm sm:text-base">Transforming...</span>
-        </>
-      ) : (
-        <>
-          {!disabled && (
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
-                             translate-x-[-200%] hover:translate-x-[200%] transition-transform duration-1000" />
-          )}
-          <Zap size={16} className="relative sm:hidden" />
-          <Zap size={18} className="relative hidden sm:block" />
-          <span className="relative">Transform Prompt</span>
-          <kbd className="relative ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/15 border border-white/20 hidden md:inline">
-            Cmd+Enter
-          </kbd>
-        </>
+      disabled={disabled}
+      whileHover={!disabled ? { scale: 1.01, y: -1 } : {}}
+      whileTap={!disabled ? { scale: 0.98 } : {}}
+      className={cn(
+        "relative w-full h-12 sm:h-14 rounded-2xl text-sm sm:text-base font-semibold",
+        "flex items-center justify-center gap-2.5 overflow-hidden",
+        "text-white transition-all duration-300",
+        disabled
+          ? "opacity-40 cursor-not-allowed bg-accent"
+          : "cursor-pointer shadow-accent hover:shadow-lg"
       )}
-    </button>
+      style={!disabled ? { background: 'var(--gradient-accent)' } : undefined}
+    >
+      {/* Shimmer overlay on hover */}
+      {!disabled && !loading && (
+        <motion.div
+          className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+            backgroundSize: '200% 100%',
+          }}
+          animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+        />
+      )}
+
+      {loading ? (
+        <span className="flex items-center gap-2.5">
+          <div className="spinner" />
+          <span>Optimizing your prompt...</span>
+        </span>
+      ) : (
+        <span className="relative flex items-center gap-2">
+          {isOverridden ? <SlidersHorizontal size={16} /> : <Sparkles size={16} />}
+          <span>{label}</span>
+          <ArrowRight size={14} className="opacity-60" />
+          <kbd className="ml-1 text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-white/15 border border-white/20 hidden md:inline">
+            {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
+          </kbd>
+        </span>
+      )}
+    </motion.button>
   );
 }

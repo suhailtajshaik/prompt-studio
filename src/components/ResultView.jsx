@@ -1,24 +1,35 @@
 import { useState } from 'react';
+import { Copy, Check, Download, Sparkles, TrendingUp, FileText, BarChart3, RotateCcw, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Copy, Check, ArrowLeft, Download, Sparkles, TrendingUp, FileText, BarChart3 } from 'lucide-react';
 import { FRAMEWORKS, TECHNIQUES } from '../data/constants';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 
-export default function ResultView({ result, badPrompt, frameworkId, techniqueIds, onBack }) {
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+};
+
+export default function ResultView({ result, badPrompt, frameworkId, techniqueIds, intent, onNewPrompt }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const fw = FRAMEWORKS[frameworkId];
   const isDecodeIntent = fw?.isSpecialWorkflow === true;
-  const techNames = techniqueIds
+  const techNames = (techniqueIds || [])
     .map((id) => TECHNIQUES.find((t) => t.id === id)?.name)
     .filter(Boolean);
 
-  // Parse Decode Intent output into 3 parts
   const decodeIntentParts = isDecodeIntent ? parseDecodeIntentOutput(result) : null;
 
   function parseDecodeIntentOutput(text) {
     const decodedIntentMatch = text.match(/DECODED_INTENT:\s*(.+?)(?=\n\nINTENT:|$)/s);
     const intentMatch = text.match(/INTENT:\s*(.+?)(?=\n\nREWRITTEN_PROMPT:|$)/s);
     const rewrittenMatch = text.match(/REWRITTEN_PROMPT:\s*([\s\S]+?)$/);
-
     return {
       decodedIntent: decodedIntentMatch ? decodedIntentMatch[1].trim() : '',
       intent: intentMatch ? intentMatch[1].trim() : '',
@@ -42,11 +53,12 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
   };
 
   const handleDownload = () => {
-    const blob = new Blob([result], { type: 'text/plain' });
+    const text = isDecodeIntent && decodeIntentParts ? decodeIntentParts.rewrittenPrompt : result;
+    const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'decode-intent-result.txt';
+    a.download = 'optimized-prompt.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -55,280 +67,191 @@ export default function ResultView({ result, badPrompt, frameworkId, techniqueId
   const goodWordCount = result.split(/\s+/).filter(Boolean).length;
   const improvement = Math.round(((goodWordCount - badWordCount) / Math.max(badWordCount, 1)) * 100);
 
+  const CopyButton = ({ text, index }) => (
+    <Button
+      variant={copiedIndex === index ? 'outline' : 'default'}
+      size="sm"
+      onClick={() => handleCopy(text, index)}
+      className="h-8 text-xs gap-1.5 rounded-xl"
+    >
+      {copiedIndex === index ? <Check size={12} /> : <Copy size={12} />}
+      {copiedIndex === index ? 'Copied!' : 'Copy'}
+    </Button>
+  );
+
+  // Decode Intent result layout
   if (isDecodeIntent && decodeIntentParts) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="space-y-4 sm:space-y-6"
-      >
-        {/* Decode Intent Header */}
-        <div className="card p-4 sm:p-7">
-          <div className="flex items-center gap-2.5 sm:gap-3 mb-4">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0"
-                 style={{ background: fw.color }}>
-              <Sparkles size={13} className="text-white sm:hidden" />
-              <Sparkles size={14} className="text-white hidden sm:block" />
-            </div>
-            <h3 className="text-xs sm:text-sm font-semibold gradient-text font-display tracking-wide">
-              Intent Decoded
-            </h3>
-          </div>
-          <div className="text-[11px] sm:text-xs text-text-tertiary">
-            Your unclear prompt analyzed and decoded into 3 clear, copyable outputs.
-          </div>
-        </div>
+      <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4 pt-4">
+        <Separator />
 
-        {/* 3 Output Cards - Stacked Vertically */}
-        <div className="space-y-3 sm:space-y-4">
-          {/* 1. Decoded Intent */}
-          <div className="card p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h4 className="text-xs sm:text-sm font-semibold text-text font-display">
-                Decoded Intent
-              </h4>
-              <button
-                onClick={() => handleCopy(decodeIntentParts.decodedIntent, 0)}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold
-                           border transition-all duration-200 ${
-                             copiedIndex === 0
-                               ? 'bg-success-light border-success/25 text-success'
-                               : 'text-white border-transparent'
-                           }`}
-                style={copiedIndex !== 0 ? { background: fw.color } : undefined}
-              >
-                {copiedIndex === 0 ? <Check size={11} /> : <Copy size={11} />}
-                {copiedIndex === 0 ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <div className="code-output p-3 sm:p-4 text-xs sm:text-[13px] rounded-lg">
-              {decodeIntentParts.decodedIntent}
-            </div>
-          </div>
+        <motion.div variants={fadeUp}>
+          <Card className="border-accent/20">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                     style={{ background: 'var(--gradient-accent)' }}>
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Intent Decoded</CardTitle>
+                  <p className="text-xs text-text-tertiary mt-0.5">
+                    Your prompt analyzed and decoded into 3 clear outputs
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        </motion.div>
 
-          {/* 2. Intent Category */}
-          <div className="card p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h4 className="text-xs sm:text-sm font-semibold text-text font-display">
-                Intent Category
-              </h4>
-              <button
-                onClick={() => handleCopy(decodeIntentParts.intent, 1)}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold
-                           border transition-all duration-200 ${
-                             copiedIndex === 1
-                               ? 'bg-success-light border-success/25 text-success'
-                               : 'text-white border-transparent'
-                           }`}
-                style={copiedIndex !== 1 ? { background: fw.color } : undefined}
-              >
-                {copiedIndex === 1 ? <Check size={11} /> : <Copy size={11} />}
-                {copiedIndex === 1 ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <div className="code-output p-3 sm:p-4 text-xs sm:text-[13px] rounded-lg font-semibold">
-              {decodeIntentParts.intent}
-            </div>
-          </div>
+        {[
+          { title: 'Decoded Intent', content: decodeIntentParts.decodedIntent, idx: 0 },
+          { title: 'Intent Category', content: decodeIntentParts.intent, idx: 1 },
+          { title: 'Rewritten Prompt', content: decodeIntentParts.rewrittenPrompt, idx: 2 },
+        ].map(({ title, content, idx }) => (
+          <motion.div key={idx} variants={fadeUp}>
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle>{title}</CardTitle>
+                  <CopyButton text={content} index={idx} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="code-output p-4 text-[13px] rounded-xl max-h-[300px] overflow-y-auto">
+                  {content}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
 
-          {/* 3. Rewritten Prompt */}
-          <div className="card p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h4 className="text-xs sm:text-sm font-semibold text-text font-display">
-                Rewritten Prompt
-              </h4>
-              <button
-                onClick={() => handleCopy(decodeIntentParts.rewrittenPrompt, 2)}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold
-                           border transition-all duration-200 ${
-                             copiedIndex === 2
-                               ? 'bg-success-light border-success/25 text-success'
-                               : 'text-white border-transparent'
-                           }`}
-                style={copiedIndex !== 2 ? { background: fw.color } : undefined}
-              >
-                {copiedIndex === 2 ? <Check size={11} /> : <Copy size={11} />}
-                {copiedIndex === 2 ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <div className="code-output p-3 sm:p-4 max-h-[300px] sm:max-h-[400px] overflow-y-auto text-xs sm:text-[13px] rounded-lg">
-              {decodeIntentParts.rewrittenPrompt}
-            </div>
-          </div>
-        </div>
-
-        {/* Back Button */}
-        <button
-          onClick={onBack}
-          className="w-full flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl
-                     text-xs sm:text-sm font-body font-medium text-text-secondary
-                     border border-border bg-surface hover:bg-surface-hover
-                     hover:border-border-focus hover:shadow-sm transition-all duration-200"
-        >
-          <ArrowLeft size={14} />
-          Back to Editor
-        </button>
+        <motion.div variants={fadeUp}>
+          <Button variant="outline" className="w-full gap-2 h-11 rounded-2xl" onClick={onNewPrompt}>
+            <RotateCcw size={14} />
+            Start New Prompt
+          </Button>
+        </motion.div>
       </motion.div>
     );
   }
 
-  // Original workflow rendering
+  // Standard result layout
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="space-y-4 sm:space-y-6"
-    >
-      {/* Improved Prompt Card */}
-      <div className="card p-4 sm:p-7">
-        <div className="flex flex-col gap-4 mb-5 sm:mb-6">
-          <div>
-            <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0"
-                   style={{ background: 'var(--gradient-primary)' }}>
-                <Sparkles size={13} className="text-white sm:hidden" />
-                <Sparkles size={14} className="text-white hidden sm:block" />
+    <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4 pt-4">
+      <Separator />
+
+      {/* Optimized Prompt Card */}
+      <motion.div variants={fadeUp}>
+        <Card className="border-accent/20 overflow-hidden">
+          {/* Gradient top accent line */}
+          <div className="h-1" style={{ background: 'var(--gradient-accent)' }} />
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                     style={{ background: 'var(--gradient-accent)' }}>
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">Optimized Prompt</CardTitle>
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {intent?.primary && (
+                      <Badge
+                        className="text-[10px] rounded-lg"
+                        style={{
+                          backgroundColor: `${intent.primary.color}12`,
+                          color: intent.primary.color,
+                          borderColor: `${intent.primary.color}25`,
+                        }}
+                      >
+                        {intent.primary.icon} {intent.primary.label}
+                      </Badge>
+                    )}
+                    {fw && <Badge variant="outline" className="text-[10px] rounded-lg">{fw.name}</Badge>}
+                    {techNames.map((name) => (
+                      <Badge key={name} variant="outline" className="text-[10px] rounded-lg">{name}</Badge>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xs sm:text-sm font-semibold gradient-text font-display tracking-wide">
-                Improved Prompt
-              </h3>
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <Button variant="outline" size="sm" onClick={handleDownload} className="h-8 text-xs gap-1.5 rounded-xl">
+                  <Download size={12} />
+                  <span className="hidden sm:inline">.txt</span>
+                </Button>
+                <CopyButton text={result} index={0} />
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-2 sm:mt-3 flex-wrap pl-[38px] sm:pl-11">
-              <span className="text-[10px] sm:text-[11px] font-mono px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border text-accent-text bg-accent-light border-accent/20">
-                {fw.name}
-              </span>
-              {techNames.map((name) => (
-                <span
-                  key={name}
-                  className="text-[10px] sm:text-[11px] font-mono px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg border bg-surface-alt text-text-tertiary border-border/60"
-                >
-                  {name}
-                </span>
-              ))}
+          </CardHeader>
+          <CardContent>
+            <div className="code-output p-4 sm:p-5 max-h-[400px] overflow-y-auto text-[13px] rounded-xl">
+              {result}
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-body font-medium
-                         border border-border bg-surface text-text-secondary
-                         hover:bg-surface-hover hover:border-border-focus hover:shadow-sm transition-all duration-200"
-            >
-              <Download size={12} />
-              .txt
-            </button>
-            <button
-              onClick={() => handleCopy(result, 0)}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-body font-semibold
-                         border transition-all duration-200 ${
-                           copiedIndex === 0
-                             ? 'bg-success-light border-success/25 text-success shadow-sm'
-                             : 'text-white border-transparent shadow-accent hover:shadow-lg'
-                         }`}
-              style={copiedIndex !== 0 ? { background: 'var(--gradient-primary)' } : undefined}
-            >
-              {copiedIndex === 0 ? <Check size={12} /> : <Copy size={12} />}
-              {copiedIndex === 0 ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-        </div>
-
-        {/* Output */}
-        <div className="code-output p-4 sm:p-6 max-h-[360px] sm:max-h-[480px] overflow-y-auto text-xs sm:text-[13px]">
-          {result}
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
-        <div className="card p-3 sm:p-5 text-center group hover:scale-[1.02] transition-transform">
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-            <FileText size={11} className="text-danger sm:hidden" />
-            <FileText size={13} className="text-danger hidden sm:block" />
-            <span className="text-[9px] sm:text-[11px] text-text-tertiary uppercase tracking-wider font-mono">
-              Original
-            </span>
-          </div>
-          <div className="text-lg sm:text-2xl font-bold font-display text-danger">
-            {badWordCount}
-          </div>
-          <div className="text-[9px] sm:text-[11px] text-text-tertiary mt-0.5">words</div>
-        </div>
-        <div className="card p-3 sm:p-5 text-center group hover:scale-[1.02] transition-transform">
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-            <Sparkles size={11} className="text-success sm:hidden" />
-            <Sparkles size={13} className="text-success hidden sm:block" />
-            <span className="text-[9px] sm:text-[11px] text-text-tertiary uppercase tracking-wider font-mono">
-              Improved
-            </span>
-          </div>
-          <div className="text-lg sm:text-2xl font-bold font-display text-success">
-            {goodWordCount}
-          </div>
-          <div className="text-[9px] sm:text-[11px] text-text-tertiary mt-0.5">words</div>
-        </div>
-        <div className="card p-3 sm:p-5 text-center group hover:scale-[1.02] transition-transform">
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-            <TrendingUp size={11} className="text-warning sm:hidden" />
-            <TrendingUp size={13} className="text-warning hidden sm:block" />
-            <span className="text-[9px] sm:text-[11px] text-text-tertiary uppercase tracking-wider font-mono">
-              Expansion
-            </span>
-          </div>
-          <div className="text-lg sm:text-2xl font-bold font-display gradient-text">
-            +{improvement}%
-          </div>
-          <div className="text-[9px] sm:text-[11px] text-text-tertiary mt-0.5">richer</div>
-        </div>
-      </div>
+      <motion.div variants={fadeUp} className="grid grid-cols-3 gap-2 sm:gap-3">
+        {[
+          { icon: FileText, label: 'Original', value: badWordCount, unit: 'words', color: 'text-danger' },
+          { icon: Sparkles, label: 'Optimized', value: goodWordCount, unit: 'words', color: 'text-success' },
+          { icon: TrendingUp, label: 'Expansion', value: `+${improvement}%`, unit: 'richer', color: 'text-accent' },
+        ].map(({ icon: Icon, label, value, unit, color }) => (
+          <Card key={label} className="text-center">
+            <CardContent className="pt-4 pb-3 px-2 sm:px-5">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Icon size={11} className={color} />
+                <span className="text-[9px] sm:text-[10px] text-text-tertiary uppercase tracking-wider font-mono">{label}</span>
+              </div>
+              <div className={`text-lg sm:text-xl font-bold ${color}`}>{value}</div>
+              <div className="text-[9px] sm:text-[10px] text-text-tertiary mt-0.5">{unit}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
 
-      {/* Before / After */}
-      <div className="card p-4 sm:p-7">
-        <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-accent-light border border-accent/15 shrink-0">
-            <BarChart3 size={13} className="text-accent sm:hidden" />
-            <BarChart3 size={14} className="text-accent hidden sm:block" />
-          </div>
-          <h3 className="text-xs sm:text-sm font-semibold text-text font-body">
-            Before vs After
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-          <div>
-            <div className="text-[10px] sm:text-[11px] uppercase tracking-[2px] sm:tracking-[3px] text-danger font-mono mb-2 sm:mb-2.5 flex items-center gap-1.5 sm:gap-2">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-danger" />
-              Before
+      {/* Before vs After */}
+      <motion.div variants={fadeUp}>
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2.5">
+              <BarChart3 size={14} className="text-accent" />
+              <CardTitle className="text-sm">Before vs After</CardTitle>
             </div>
-            <div className="p-3.5 sm:p-5 rounded-xl bg-danger-light border border-danger/15 font-mono text-xs sm:text-[13px] text-text-secondary leading-relaxed break-words">
-              {badPrompt}
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-danger font-mono mb-2 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-danger" />
+                  Before
+                </div>
+                <div className="p-3.5 rounded-xl bg-danger-light border border-danger/15 font-mono text-xs text-text-secondary leading-relaxed break-words">
+                  {badPrompt}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-accent-text font-mono mb-2 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  After
+                </div>
+                <div className="p-3.5 rounded-xl bg-accent-light border border-accent/15 font-mono text-xs text-accent-text leading-relaxed max-h-[180px] overflow-y-auto break-words">
+                  {result.slice(0, 500)}{result.length > 500 ? '...' : ''}
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-[10px] sm:text-[11px] uppercase tracking-[2px] sm:tracking-[3px] text-accent-text font-mono mb-2 sm:mb-2.5 flex items-center gap-1.5 sm:gap-2">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{ background: 'var(--gradient-primary)' }} />
-              After
-            </div>
-            <div className="p-3.5 sm:p-5 rounded-xl bg-accent-light border border-accent/15 font-mono text-xs sm:text-[13px] text-accent-text leading-relaxed max-h-[160px] sm:max-h-[200px] overflow-y-auto break-words">
-              {result.slice(0, 500)}{result.length > 500 ? '...' : ''}
-            </div>
-          </div>
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="w-full flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl
-                   text-xs sm:text-sm font-body font-medium text-text-secondary
-                   border border-border bg-surface hover:bg-surface-hover
-                   hover:border-border-focus hover:shadow-sm transition-all duration-200"
-      >
-        <ArrowLeft size={14} />
-        Back to Editor
-      </button>
+      <motion.div variants={fadeUp}>
+        <Button variant="outline" className="w-full gap-2 h-11 rounded-2xl" onClick={onNewPrompt}>
+          <RotateCcw size={14} />
+          Start New Prompt
+        </Button>
+      </motion.div>
     </motion.div>
   );
 }

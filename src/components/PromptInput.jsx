@@ -1,13 +1,49 @@
-import { useRef, useEffect } from 'react';
-import { AlertTriangle, Pen } from 'lucide-react';
+import { useRef, useEffect, useCallback } from 'react';
+import { AlertTriangle, Mic, MicOff, Upload, X, FileText, Sparkles, ArrowUp, RotateCcw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { EXAMPLE_PROMPTS } from '../data/constants';
 import { analyzePrompt, getScoreClass } from '../data/analyzer';
+import { useSpeechToText } from '../hooks/useSpeechToText';
+import { useFileUpload } from '../hooks/useFileUpload';
+import IntentBadge from './IntentBadge';
+import { Badge } from './ui/badge';
+import { cn } from '@/lib/utils';
 
-export default function PromptInput({ value, onChange, placeholder = 'Paste your prompt here...' }) {
+export default function PromptInput({ value, onChange, intent, placeholder, onSubmit, canSubmit, hasApiKey }) {
   const ref = useRef(null);
   const analysis = analyzePrompt(value);
   const wordCount = value.split(/\s+/).filter(Boolean).length;
 
+  // Speech-to-text
+  const existingTextRef = useRef('');
+  const handleSpeechResult = useCallback((transcript) => {
+    const base = existingTextRef.current;
+    const separator = base && !base.endsWith(' ') ? ' ' : '';
+    onChange(base + separator + transcript);
+  }, [onChange]);
+
+  const { listening, supported: speechSupported, toggle: toggleSpeechRaw } = useSpeechToText(handleSpeechResult);
+  const toggleSpeech = useCallback(() => {
+    if (!listening) {
+      existingTextRef.current = value;
+    }
+    toggleSpeechRaw();
+  }, [listening, value, toggleSpeechRaw]);
+
+  // File upload
+  const handleFileText = useCallback((text, fileName) => {
+    onChange((prev) => {
+      const prefix = prev ? prev + '\n\n--- Content from ' + fileName + ' ---\n\n' : '';
+      return prefix + text;
+    });
+  }, [onChange]);
+
+  const {
+    fileName, error: fileError, inputRef: fileInputRef,
+    openFilePicker, handleFileChange, handleDrop, clearFile,
+  } = useFileUpload(handleFileText);
+
+  // Auto-resize textarea
   useEffect(() => {
     if (ref.current) {
       ref.current.style.height = 'auto';
@@ -15,97 +51,251 @@ export default function PromptInput({ value, onChange, placeholder = 'Paste your
     }
   }, [value]);
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
-    <div className="card p-4 sm:p-7">
-      {/* Header Row */}
-      <div className="flex items-start sm:items-center justify-between mb-4 sm:mb-5 gap-2">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-accent-light border border-accent/15 shrink-0">
-            <Pen size={12} className="text-accent sm:hidden" />
-            <Pen size={14} className="text-accent hidden sm:block" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-xs sm:text-sm font-semibold text-text font-body">Your Prompt</h3>
-            {value.trim() && (
-              <span className={`text-[10px] sm:text-[11px] font-mono px-1.5 sm:px-2 py-0.5 rounded-md mt-0.5 inline-block ${getScoreClass(analysis.score)}`}>
-                {analysis.score}/100 · {analysis.grade}
-              </span>
+    <div className="space-y-3">
+      {/* Main input card */}
+      <div
+        className={cn(
+          "relative rounded-2xl border bg-surface overflow-hidden transition-all duration-300",
+          "shadow-sm hover:shadow-md",
+          listening
+            ? "border-red-400/40 ring-2 ring-red-400/20"
+            : "border-border hover:border-border-focus gradient-border float-glow"
+        )}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {/* Textarea */}
+        <textarea
+          ref={ref}
+          className="w-full min-h-[140px] bg-transparent text-[14px] sm:text-sm text-text
+                     placeholder:text-text-tertiary/50 placeholder:font-body
+                     font-mono leading-relaxed resize-none outline-none
+                     px-4 sm:px-6 pt-5 pb-3 border-none"
+          placeholder={placeholder || "Describe what you need in plain language...\n\ne.g. \"Write a professional email to decline a meeting\"\n     \"Help me analyze sales data from last quarter\""}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          spellCheck={false}
+        />
+
+        {/* Bottom toolbar */}
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-5 py-2.5 border-t border-border/40 bg-surface-alt/30">
+          <div className="flex items-center gap-1.5">
+            {/* File upload */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".txt,.md,.csv,.json,.pdf,.docx,.js,.py,.ts,.jsx,.tsx,.html,.css,.xml,.yaml,.yml"
+              onChange={handleFileChange}
+            />
+            <button
+              onClick={openFilePicker}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                         text-text-tertiary hover:text-accent hover:bg-accent-light transition-all duration-150"
+            >
+              <Upload size={13} />
+              <span className="hidden sm:inline">Upload</span>
+            </button>
+
+            {/* Speech-to-text */}
+            {speechSupported && (
+              <button
+                onClick={toggleSpeech}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150",
+                  listening
+                    ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                    : "text-text-tertiary hover:text-accent hover:bg-accent-light"
+                )}
+              >
+                {listening ? <MicOff size={13} /> : <Mic size={13} />}
+                <span className="hidden sm:inline">
+                  {listening ? 'Stop' : 'Speak'}
+                </span>
+              </button>
             )}
+
+            {/* Clear / Reset */}
+            {value.trim() && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={() => { onChange(''); clearFile(); }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                           text-text-tertiary hover:text-danger hover:bg-danger-light transition-all duration-150"
+                title="Clear prompt"
+              >
+                <RotateCcw size={13} />
+                <span className="hidden sm:inline">Clear</span>
+              </motion.button>
+            )}
+
+            {/* File attachment indicator */}
+            <AnimatePresence>
+              {fileName && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-light border border-accent/15 text-xs text-accent-text font-medium"
+                >
+                  <FileText size={11} />
+                  <span className="max-w-[100px] sm:max-w-[120px] truncate">{fileName}</span>
+                  <button onClick={clearFile} className="hover:text-danger transition-colors">
+                    <X size={11} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Score indicator - always visible when there's text */}
+            <AnimatePresence>
+              {value.trim() && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className={`text-[11px] font-mono px-2 py-0.5 rounded-lg whitespace-nowrap ${getScoreClass(analysis.score)}`}
+                >
+                  {analysis.score}/100
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            <Badge variant="outline" className="font-mono text-[11px] rounded-lg whitespace-nowrap hidden sm:inline-flex">
+              {wordCount} words
+            </Badge>
+
+            {/* Submit / Send button - always present */}
+            <motion.button
+              onClick={canSubmit && hasApiKey ? onSubmit : undefined}
+              disabled={!value.trim() || !canSubmit || !hasApiKey}
+              whileHover={canSubmit && hasApiKey && value.trim() ? { scale: 1.08 } : {}}
+              whileTap={canSubmit && hasApiKey && value.trim() ? { scale: 0.9 } : {}}
+              className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0",
+                value.trim() && canSubmit && hasApiKey
+                  ? "text-white cursor-pointer shadow-sm hover:shadow-md"
+                  : value.trim() && !hasApiKey
+                    ? "bg-warning/15 text-warning cursor-not-allowed border border-warning/25"
+                    : "bg-surface-alt text-text-tertiary/30 cursor-not-allowed"
+              )}
+              style={value.trim() && canSubmit && hasApiKey ? { background: 'var(--gradient-accent)' } : undefined}
+              title={!value.trim() ? 'Type a prompt first' : !hasApiKey ? 'Add an API key first' : 'Optimize prompt'}
+            >
+              <ArrowUp size={16} strokeWidth={2.5} />
+            </motion.button>
           </div>
         </div>
-        <span className="text-[10px] sm:text-xs text-text-tertiary font-mono px-2 py-0.5 sm:py-1 rounded-lg bg-surface-alt border border-border/50 shrink-0">
-          {wordCount} words
-        </span>
       </div>
 
-      {/* Textarea */}
-      <textarea
-        ref={ref}
-        className="prompt-input text-[13px] sm:text-sm"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        spellCheck={false}
-      />
-
-      {/* Example Chips */}
-      <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 flex-wrap">
-        <span className="text-[10px] sm:text-xs text-text-tertiary font-medium">Try:</span>
-        {EXAMPLE_PROMPTS.map((ex) => (
-          <button
-            key={ex.label}
-            onClick={() => onChange(ex.bad)}
-            className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-body rounded-lg sm:rounded-xl
-                       border border-border/60 bg-surface-alt/50
-                       text-text-tertiary hover:border-accent/30 hover:bg-accent-light
-                       hover:text-accent transition-all duration-200"
+      {/* File upload error */}
+      <AnimatePresence>
+        {fileError && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="text-xs text-danger bg-danger-light border border-danger/15 rounded-xl px-4 py-2.5"
           >
-            {ex.label}
-          </button>
-        ))}
-      </div>
+            {fileError}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Listening indicator */}
+      <AnimatePresence>
+        {listening && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-900/15 border border-red-200 dark:border-red-800/30 text-xs text-red-600 dark:text-red-400"
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            Listening... speak naturally, your words will appear above
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Auto-detected intent */}
+      <IntentBadge intent={intent} />
+
+      {/* Example chips - only show when empty */}
+      {!value.trim() && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-2.5"
+        >
+          <span className="text-xs text-text-tertiary font-medium flex items-center gap-1.5">
+            <Sparkles size={11} />
+            Try an example
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {EXAMPLE_PROMPTS.map((ex) => (
+              <button
+                key={ex.label}
+                onClick={() => onChange(ex.bad)}
+                className="group text-left px-3.5 py-2.5 rounded-xl border border-border bg-surface
+                           hover:border-accent/30 hover:bg-accent-light/50 hover:shadow-sm
+                           transition-all duration-200"
+              >
+                <span className="text-xs font-semibold text-text group-hover:text-accent transition-colors">
+                  {ex.label}
+                </span>
+                <p className="text-[11px] text-text-tertiary mt-0.5 line-clamp-1">
+                  {ex.bad}
+                </p>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Issues */}
-      {analysis.issues.length > 0 && (
-        <div className="mt-4 sm:mt-6 space-y-2">
-          <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <AlertTriangle size={13} className="text-warning" />
-            <span className="text-[10px] sm:text-xs font-semibold text-warning uppercase tracking-wider">
-              Detected Issues
+      {value.trim() && analysis.issues.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-2"
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={12} className="text-warning" />
+            <span className="text-[11px] font-semibold text-warning uppercase tracking-wider">
+              {analysis.issues.length} issue{analysis.issues.length > 1 ? 's' : ''} detected
             </span>
-            <span className="text-[9px] sm:text-[10px] font-mono text-warning/60 px-1.5 sm:px-2 py-0.5 rounded-md bg-warning-light">
-              {analysis.issues.length}
+            <span className="text-[11px] text-text-tertiary">
+              — auto-fixed during optimization
             </span>
           </div>
-          {analysis.issues.map((item, i) => (
-            <div
-              key={i}
-              className={`flex items-start gap-2.5 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm border transition-colors ${
-                item.severity === 'high'
-                  ? 'bg-danger-light border-danger/15'
-                  : item.severity === 'medium'
-                    ? 'bg-warning-light border-warning/15'
-                    : 'bg-surface-alt border-border/50'
-              }`}
-            >
-              <span
-                className={`mt-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${
-                  item.severity === 'high'
-                    ? 'bg-danger'
-                    : item.severity === 'medium'
-                      ? 'bg-warning'
-                      : 'bg-text-tertiary'
-                }`}
-              />
-              <div className="min-w-0">
-                <p className="text-text text-xs sm:text-[13px] leading-relaxed">{item.issue}</p>
-                <p className="text-text-tertiary text-[10px] sm:text-xs mt-1 sm:mt-1.5">
-                  <span className="text-accent-text font-medium">Fix:</span> {item.fix}
-                </p>
+          <div className="grid gap-1.5">
+            {analysis.issues.slice(0, 3).map((item, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2.5 px-3.5 py-2 rounded-xl text-xs border bg-surface-alt/50 border-border"
+              >
+                <span
+                  className={cn(
+                    "mt-1.5 w-1.5 h-1.5 rounded-full shrink-0",
+                    item.severity === 'high' ? 'bg-danger' :
+                    item.severity === 'medium' ? 'bg-warning' : 'bg-text-tertiary'
+                  )}
+                />
+                <span className="text-text-secondary">{item.issue}</span>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </motion.div>
       )}
     </div>
   );
