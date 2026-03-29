@@ -1,4 +1,4 @@
-import { Sparkles, Sun, Moon, Wand2, BookOpen, Palette, Settings, Key, ChevronRight, Menu, X } from 'lucide-react';
+import { Sparkles, Sun, Moon, Wand2, BookOpen, Palette, Key, Menu, X, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -11,6 +11,13 @@ const WORKSPACE_ITEMS = [
 const SETTINGS_ITEMS = [
   { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'settings',   label: 'API Keys',  icon: Key },
+];
+
+const MOBILE_TABS = [
+  { id: 'studio',     label: 'Studio',     icon: Wand2 },
+  { id: 'learn',      label: 'Learn',      icon: BookOpen },
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'settings',   label: 'Settings',   icon: Settings },
 ];
 
 function NavItem({ id, label, icon: Icon, active, onChange, accentColor }) {
@@ -175,46 +182,72 @@ export default function Navbar({ active, onChange, dark, onToggleTheme, currentT
             <span className="text-sm font-bold text-text tracking-tight">Prompt Studio</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {currentTheme && (
+              <button
+                onClick={() => handleNav('appearance')}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all hover:opacity-80"
+                style={{
+                  background: currentTheme.colors.accLight,
+                  color: currentTheme.colors.acc,
+                  border: `1px solid ${currentTheme.colors.bord}`,
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: currentTheme.colors.acc }}
+                />
+                {currentTheme.name}
+              </button>
+            )}
             <button
               onClick={onToggleTheme}
               className="h-9 w-9 rounded-xl flex items-center justify-center text-text-secondary hover:text-text hover:bg-surface-alt transition-all"
             >
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="h-9 w-9 rounded-xl flex items-center justify-center text-text-secondary hover:text-text hover:bg-surface-alt transition-all"
-            >
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile slide-out panel */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-              className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            />
-            <motion.aside
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: 'spring', bounce: 0.1, duration: 0.4 }}
-              className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-bg border-r border-border/60 z-50 flex flex-col"
-            >
-              {sidebarContent}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Mobile bottom tab bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-surface-glass backdrop-blur-xl safe-area-bottom">
+        <div className="flex items-center justify-around h-16 px-1">
+          {MOBILE_TABS.map(({ id, label, icon: Icon }) => {
+            const isActive = active === id;
+            return (
+              <button
+                key={id}
+                onClick={() => handleNav(id)}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all duration-200 min-w-[60px]",
+                  isActive ? "text-text" : "text-text-secondary"
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="mobile-nav-pill"
+                    className="absolute inset-0 rounded-2xl"
+                    style={{ background: currentTheme?.colors?.accLight || 'var(--color-accent-light)' }}
+                    transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                  />
+                )}
+                <Icon
+                  size={18}
+                  className="relative"
+                  style={isActive ? { color: accentColor } : {}}
+                />
+                <span
+                  className="relative text-[10px] font-semibold"
+                  style={isActive ? { color: accentColor } : {}}
+                >
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }

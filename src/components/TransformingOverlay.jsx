@@ -36,53 +36,55 @@ export default function TransformingOverlay() {
         className="flex flex-col items-center gap-6 p-8 sm:p-10 rounded-3xl
                    bg-surface border border-border shadow-xl max-w-sm w-[90%] text-center"
       >
-        {/* Animated orbs */}
-        <div className="relative w-20 h-20">
-          {/* Center icon */}
+        {/* Icon + spinner ring */}
+        <div className="relative flex items-center justify-center w-20 h-20">
+          {/* Outer spinning arc ring */}
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            className="absolute inset-0 flex items-center justify-center"
+            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: 'conic-gradient(from 0deg, transparent 75%, var(--color-accent) 100%)',
+              padding: '2px',
+              borderRadius: '9999px',
+            }}
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-accent"
-              style={{ background: 'var(--gradient-accent)' }}
-            >
-              <Sparkles size={22} className="text-white" />
-            </div>
+              className="w-full h-full rounded-full"
+              style={{ background: 'var(--color-surface)' }}
+            />
           </motion.div>
 
-          {/* Orbiting dots */}
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="absolute left-1/2 top-1/2 w-2.5 h-2.5 -ml-1.25 -mt-1.25 rounded-full bg-accent"
-              style={{ opacity: 0.3 + i * 0.2 }}
-              animate={{ rotate: 360 }}
-              transition={{
-                duration: 2.5 + i * 0.5,
-                repeat: Infinity,
-                ease: 'linear',
-                delay: i * 0.3,
-              }}
-            >
-              <motion.div
-                className="w-2 h-2 rounded-full bg-accent"
-                style={{
-                  transform: `translateX(${28 + i * 6}px)`,
-                }}
-              />
-            </motion.div>
-          ))}
-
-          {/* Pulse ring */}
+          {/* Slow counter-spin faint ring */}
           <motion.div
-            animate={{ scale: [1, 1.8], opacity: [0.2, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeOut' }}
-            className="absolute inset-0 rounded-2xl border-2 border-accent"
+            animate={{ rotate: -360 }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+            className="absolute rounded-full"
+            style={{
+              inset: 4,
+              background: 'conic-gradient(from 180deg, transparent 60%, var(--color-accent) 100%)',
+              opacity: 0.25,
+              borderRadius: '9999px',
+            }}
           />
+
+          {/* Static centered icon — does NOT rotate */}
+          <div
+            className="relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
+            style={{ background: 'var(--gradient-accent)' }}
+          >
+            {/* Subtle pulse glow behind icon */}
+            <motion.div
+              animate={{ scale: [1, 1.35], opacity: [0.35, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+              className="absolute inset-0 rounded-2xl"
+              style={{ background: 'var(--gradient-accent)' }}
+            />
+            <Sparkles size={20} className="text-white relative" />
+          </div>
         </div>
 
+        {/* Text */}
         <div className="space-y-2">
           <h3 className="text-lg font-bold text-text">
             Transforming your prompt
@@ -95,7 +97,7 @@ export default function TransformingOverlay() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25 }}
-                className="text-sm text-text-tertiary"
+                className="text-sm text-text-secondary"
               >
                 {messages[msgIndex]}
               </motion.p>
@@ -104,7 +106,7 @@ export default function TransformingOverlay() {
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-1.5 rounded-full bg-surface-alt overflow-hidden">
+        <div className="w-full h-1 rounded-full bg-surface-alt overflow-hidden">
           <motion.div
             className="h-full rounded-full"
             style={{ background: 'var(--gradient-accent)' }}

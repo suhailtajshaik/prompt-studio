@@ -34,6 +34,10 @@ export default function App() {
   const { result, loading, error, usedConfig, transform, autoTransform, reset } = useTransform();
   const intent = useIntentDetection(badPrompt);
 
+  // Snapshot of the prompt at submit time — frozen so ResultView's "Before" panel
+  // doesn't go blank if the user edits/clears the textarea afterward.
+  const [submittedPrompt, setSubmittedPrompt] = useState('');
+
   // Advanced mode: manual framework + technique overrides
   const [manualFramework, setManualFramework] = useState(null);
   const [manualTechniques, setManualTechniques] = useState(null);
@@ -66,6 +70,7 @@ export default function App() {
   }, []);
 
   const handleTransform = useCallback(async () => {
+    setSubmittedPrompt(badPrompt); // snapshot before any async state change
     if (isOverridden) {
       await transform(badPrompt, effectiveFramework, effectiveTechniques, provider, model, apiKeys[provider]);
     } else {
@@ -83,6 +88,7 @@ export default function App() {
 
   const handleNewPrompt = useCallback(() => {
     setBadPrompt('');
+    setSubmittedPrompt('');
     reset();
     handleResetToAuto();
   }, [reset, handleResetToAuto]);
@@ -97,8 +103,9 @@ export default function App() {
         currentTheme={currentTheme}
       />
 
-      {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
+      {/* Main content — offset by sidebar width on desktop, consistent max-width for all pages */}
+      <main className="md:ml-56 px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 md:pb-10">
+        <div className="max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           {/* STUDIO PAGE */}
           {page === 'studio' && (
@@ -187,7 +194,7 @@ export default function App() {
                   >
                     <ResultView
                       result={result}
-                      badPrompt={badPrompt}
+                      badPrompt={submittedPrompt}
                       frameworkId={usedConfig?.frameworkId}
                       techniqueIds={usedConfig?.techniqueIds || []}
                       intent={intent}
@@ -252,7 +259,7 @@ export default function App() {
             >
               <header className="mb-8">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
-                  Settings
+                  API Keys
                 </h1>
                 <p className="text-sm sm:text-base text-text-secondary mt-1.5">
                   Configure providers, models, and API keys
@@ -270,6 +277,7 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </main>
 
       <AnimatePresence>
