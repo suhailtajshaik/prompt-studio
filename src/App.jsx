@@ -8,6 +8,7 @@ import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
+import AppearanceView from './components/AppearanceView';
 import ErrorBanner from './components/ErrorBanner';
 import TransformingOverlay from './components/TransformingOverlay';
 import { useTransform } from './hooks/useTransform';
@@ -24,7 +25,7 @@ const pageVariants = {
 export default function App() {
   const [page, setPage] = useState('studio');
   const [badPrompt, setBadPrompt] = useState('');
-  const [dark, setDark] = useTheme();
+  const [dark, setDark, themeId, setThemeId, currentTheme] = useTheme();
 
   const [provider, setProvider] = useState('anthropic');
   const [model, setModel] = useState('claude-sonnet-4-6');
@@ -93,9 +94,10 @@ export default function App() {
         onChange={setPage}
         dark={dark}
         onToggleTheme={() => setDark((d) => !d)}
+        currentTheme={currentTheme}
       />
 
-      {/* Main content - wider on desktop, full-width on mobile */}
+      {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
         <AnimatePresence mode="wait">
           {/* STUDIO PAGE */}
@@ -119,7 +121,7 @@ export default function App() {
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text tracking-tight">
                     Turn <span className="gradient-text">bad prompts</span> into great ones
                   </h1>
-                  <p className="text-sm sm:text-base text-text-tertiary mt-2.5 max-w-xl mx-auto leading-relaxed">
+                  <p className="text-sm sm:text-base text-text-secondary mt-2.5 max-w-xl mx-auto leading-relaxed">
                     Paste your rough prompt and we'll optimize it using proven frameworks
                     and techniques — automatically.
                   </p>
@@ -210,11 +212,32 @@ export default function App() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
                   Learn
                 </h1>
-                <p className="text-sm sm:text-base text-text-tertiary mt-1.5">
+                <p className="text-sm sm:text-base text-text-secondary mt-1.5">
                   Explore frameworks, techniques, and intent categories
                 </p>
               </header>
               <LearnView />
+            </motion.div>
+          )}
+
+          {/* APPEARANCE PAGE */}
+          {page === 'appearance' && (
+            <motion.div
+              key="appearance"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <header className="mb-8">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
+                  Appearance
+                </h1>
+                <p className="text-sm sm:text-base text-text-secondary mt-1.5">
+                  Choose a theme that fits your workflow and style.
+                </p>
+              </header>
+              <AppearanceView themeId={themeId} onThemeChange={setThemeId} />
             </motion.div>
           )}
 
@@ -231,7 +254,7 @@ export default function App() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
                   Settings
                 </h1>
-                <p className="text-sm sm:text-base text-text-tertiary mt-1.5">
+                <p className="text-sm sm:text-base text-text-secondary mt-1.5">
                   Configure providers, models, and API keys
                 </p>
               </header>
