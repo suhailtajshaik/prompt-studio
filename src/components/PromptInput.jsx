@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { AlertTriangle, Mic, MicOff, Upload, X, FileText, Sparkles, ArrowUp, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Mic, MicOff, Upload, X, FileText, Sparkles, ArrowUp, RotateCcw, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EXAMPLE_PROMPTS } from '../data/constants';
 import { analyzePrompt, getScoreClass } from '../data/analyzer';
@@ -39,7 +39,7 @@ export default function PromptInput({ value, onChange, intent, placeholder, onSu
   }, [onChange]);
 
   const {
-    fileName, error: fileError, inputRef: fileInputRef,
+    uploading, fileName, error: fileError, inputRef: fileInputRef,
     openFilePicker, handleFileChange, handleDrop, clearFile,
   } = useFileUpload(handleFileText);
 
@@ -91,7 +91,7 @@ export default function PromptInput({ value, onChange, intent, placeholder, onSu
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".txt,.md,.csv,.json,.pdf,.docx,.js,.py,.ts,.jsx,.tsx,.html,.css,.xml,.yaml,.yml"
+              accept=".txt,.md,.csv,.json,.pdf,.docx,.js,.py,.ts,.jsx,.tsx,.html,.css,.xml,.yaml,.yml,.png,.jpg,.jpeg,.gif,.bmp,.webp,.tiff,.tif"
               onChange={handleFileChange}
             />
             <button
@@ -135,6 +135,21 @@ export default function PromptInput({ value, onChange, intent, placeholder, onSu
                 <span className="hidden sm:inline">Clear</span>
               </motion.button>
             )}
+
+            {/* Uploading indicator */}
+            <AnimatePresence>
+              {uploading && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-light border border-accent/15 text-xs text-accent-text font-medium"
+                >
+                  <Loader2 size={11} className="animate-spin" />
+                  <span>Processing...</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* File attachment indicator */}
             <AnimatePresence>

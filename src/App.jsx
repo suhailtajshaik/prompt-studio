@@ -69,6 +69,13 @@ export default function App() {
     setManualTechniques(null);
   }, []);
 
+  // Immediately lock the current auto-detected values into manual overrides
+  // so the picker opens pre-filled and isOverridden flips to true right away.
+  const handleEnterManual = useCallback(() => {
+    setManualFramework(autoFramework);
+    setManualTechniques(autoTechniques);
+  }, [autoFramework, autoTechniques]);
+
   const handleTransform = useCallback(async () => {
     setSubmittedPrompt(badPrompt); // snapshot before any async state change
     if (isOverridden) {
@@ -153,6 +160,7 @@ export default function App() {
                 intent={intent}
                 isOverridden={isOverridden}
                 onResetToAuto={handleResetToAuto}
+                onEnterManual={handleEnterManual}
               />
 
               <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
