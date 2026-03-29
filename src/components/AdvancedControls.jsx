@@ -8,10 +8,10 @@ import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 
 const FRAMEWORK_COLORS = {
-  decode_intent: { accent: '#E11D48', bg: 'rgba(225, 29, 72, 0.05)' },
-  costar: { accent: '#059669', bg: 'rgba(5, 150, 105, 0.05)' },
-  sixstep: { accent: '#D97706', bg: 'rgba(217, 119, 6, 0.05)' },
-  markdown: { accent: '#7C3AED', bg: 'rgba(124, 58, 237, 0.05)' },
+  decode_intent: { accent: '#E11D48', bg: 'rgba(225, 29, 72, 0.04)' },
+  costar: { accent: '#10B981', bg: 'rgba(16, 185, 129, 0.04)' },
+  sixstep: { accent: '#F59E0B', bg: 'rgba(245, 158, 11, 0.04)' },
+  markdown: { accent: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.04)' },
 };
 
 export default function AdvancedControls({
@@ -25,33 +25,61 @@ export default function AdvancedControls({
 }) {
   const [open, setOpen] = useState(false);
 
-  // Determine what auto would select
   const autoFramework = intent?.primary?.framework || 'costar';
   const autoTechniques = intent?.primary?.techniques || ['zero-shot'];
 
+  const fw = FRAMEWORKS[framework];
+  const techCount = techniques.length;
+
   return (
     <div>
-      {/* Toggle button */}
+      {/* Toggle button — card-style bar */}
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150",
-          "text-text-tertiary hover:text-text-secondary hover:bg-surface-alt",
-          open && "bg-surface-alt text-text-secondary",
-          isOverridden && "text-accent-text"
+          "w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-200",
+          "hover:shadow-sm active:scale-[0.995]",
+          open
+            ? "bg-surface border-accent/25 shadow-sm"
+            : "bg-surface border-border hover:border-border-focus"
         )}
       >
-        <SlidersHorizontal size={13} />
-        <span>Advanced</span>
-        {isOverridden && (
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent-text">
-            Manual
-          </Badge>
-        )}
-        <ChevronDown
-          size={12}
-          className={cn("transition-transform duration-200", open && "rotate-180")}
-        />
+        <div className={cn(
+          "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200",
+          open || isOverridden ? "bg-accent-light text-accent" : "bg-surface-alt text-text-tertiary"
+        )}>
+          <SlidersHorizontal size={14} />
+        </div>
+
+        <div className="flex-1 text-left min-w-0">
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "text-sm font-medium transition-colors",
+              open ? "text-text" : "text-text-secondary"
+            )}>
+              Advanced Settings
+            </span>
+            {isOverridden && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-accent/30 text-accent-text rounded-lg">
+                Manual
+              </Badge>
+            )}
+          </div>
+          {!open && (
+            <p className="text-[11px] text-text-tertiary mt-0.5 truncate">
+              {fw?.name || 'Auto'} framework · {techCount} technique{techCount !== 1 ? 's' : ''}
+              {isOverridden ? ' (custom)' : ' (auto-detected)'}
+            </p>
+          )}
+        </div>
+
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-text-tertiary shrink-0"
+        >
+          <ChevronDown size={16} />
+        </motion.div>
       </button>
 
       {/* Collapsible panel */}
@@ -61,7 +89,7 @@ export default function AdvancedControls({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
             <div className="pt-3 space-y-4">
@@ -70,14 +98,14 @@ export default function AdvancedControls({
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-light/50 border border-accent/10"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-light/50 border border-accent/10"
                 >
                   <span className="text-xs text-text-secondary flex-1">
-                    You're using manual selections. Auto-detected: <span className="font-mono text-accent-text">{FRAMEWORKS[autoFramework]?.name}</span>
+                    Manual mode. Auto-detected: <span className="font-mono text-accent-text">{FRAMEWORKS[autoFramework]?.name}</span>
                     {' + '}
                     {autoTechniques.map((id) => TECHNIQUES.find((t) => t.id === id)?.name).filter(Boolean).join(', ')}
                   </span>
-                  <Button variant="outline" size="sm" onClick={onResetToAuto} className="h-6 text-[11px] gap-1.5 shrink-0">
+                  <Button variant="outline" size="sm" onClick={onResetToAuto} className="h-7 text-[11px] gap-1.5 shrink-0 rounded-lg">
                     <RotateCcw size={10} />
                     Reset to Auto
                   </Button>
@@ -102,12 +130,12 @@ export default function AdvancedControls({
                             key={fw.id}
                             onClick={() => onFrameworkChange(fw.id)}
                             className={cn(
-                              "relative text-left w-full p-3 rounded-lg border transition-all duration-150",
+                              "relative text-left w-full p-3 rounded-xl border transition-all duration-200",
                               isActive
-                                ? "border-accent/30 shadow-sm"
+                                ? "shadow-sm"
                                 : "border-border hover:border-border-focus hover:bg-surface-hover"
                             )}
-                            style={isActive ? { backgroundColor: colors.bg, borderColor: `${colors.accent}40` } : undefined}
+                            style={isActive ? { backgroundColor: colors.bg, borderColor: `${colors.accent}35` } : undefined}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
@@ -116,7 +144,7 @@ export default function AdvancedControls({
                               />
                               <span className="font-semibold text-[13px] text-text">{fw.name}</span>
                               {isAutoSelected && (
-                                <Badge variant="outline" className="text-[9px] px-1 py-0 ml-auto">auto</Badge>
+                                <Badge variant="outline" className="text-[9px] px-1 py-0 ml-auto rounded-lg">auto</Badge>
                               )}
                             </div>
                             <p className="text-[11px] text-text-tertiary leading-relaxed pl-[18px]">
@@ -128,7 +156,7 @@ export default function AdvancedControls({
                                   <Badge
                                     key={f.key}
                                     variant="outline"
-                                    className="text-[9px] font-mono px-1 py-0"
+                                    className="text-[9px] font-mono px-1 py-0 rounded-md"
                                     style={isActive ? { color: colors.accent, borderColor: `${colors.accent}30` } : undefined}
                                   >
                                     {f.key}
@@ -151,7 +179,7 @@ export default function AdvancedControls({
                         <Wand2 size={13} className="text-accent" />
                         <span className="text-xs font-semibold text-text uppercase tracking-wider">Techniques</span>
                       </div>
-                      <Badge variant="outline" className="font-mono text-[10px]">
+                      <Badge variant="outline" className="font-mono text-[10px] rounded-lg">
                         {techniques.length} selected
                       </Badge>
                     </div>
@@ -164,7 +192,7 @@ export default function AdvancedControls({
                             key={tech.id}
                             onClick={() => onTechniqueToggle(tech.id)}
                             className={cn(
-                              "text-left w-full flex items-center gap-2.5 p-2.5 rounded-lg border transition-all duration-150",
+                              "text-left w-full flex items-center gap-2.5 p-2.5 rounded-xl border transition-all duration-200",
                               isActive
                                 ? "border-accent/25 bg-accent-light"
                                 : "border-border hover:border-border-focus hover:bg-surface-hover"
@@ -180,7 +208,7 @@ export default function AdvancedControls({
                                   {tech.name}
                                 </span>
                                 {isAutoSelected && (
-                                  <Badge variant="outline" className="text-[9px] px-1 py-0">auto</Badge>
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0 rounded-md">auto</Badge>
                                 )}
                               </div>
                               <span className="text-[10px] text-text-tertiary block truncate">
@@ -188,7 +216,7 @@ export default function AdvancedControls({
                               </span>
                             </div>
                             {isActive && (
-                              <span className="w-4 h-4 rounded-full bg-accent flex items-center justify-center shrink-0">
+                              <span className="w-5 h-5 rounded-lg bg-accent flex items-center justify-center shrink-0">
                                 <Check size={10} className="text-white" />
                               </span>
                             )}

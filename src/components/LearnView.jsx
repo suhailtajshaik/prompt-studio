@@ -7,9 +7,9 @@ import { Badge } from './ui/badge';
 
 const FRAMEWORK_COLORS = {
   decode_intent: '#E11D48',
-  costar: '#059669',
-  sixstep: '#D97706',
-  markdown: '#7C3AED',
+  costar: '#10B981',
+  sixstep: '#F59E0B',
+  markdown: '#8B5CF6',
 };
 
 const container = {
@@ -17,8 +17,8 @@ const container = {
   show: { transition: { staggerChildren: 0.06 } },
 };
 const item = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
 };
 
 export default function LearnView() {
@@ -34,7 +34,8 @@ export default function LearnView() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                   style={{ background: 'var(--gradient-accent)' }}>
                 <Brain size={16} className="text-white" />
               </div>
               <div>
@@ -46,12 +47,12 @@ export default function LearnView() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {INTENT_CATEGORIES.map((cat) => (
                 <div
                   key={cat.id}
-                  className="flex items-start gap-3 p-3 rounded-lg border border-border bg-surface-alt/50
-                             hover:bg-surface-hover hover:border-border-focus transition-all duration-150"
+                  className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-surface-alt/50
+                             hover:bg-surface-hover hover:border-border-focus transition-all duration-200"
                 >
                   <span className="text-xl mt-0.5 shrink-0">{cat.icon}</span>
                   <div className="min-w-0">
@@ -61,15 +62,15 @@ export default function LearnView() {
                     <p className="text-[11px] text-text-tertiary leading-relaxed mb-2">
                       {cat.description}
                     </p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary font-mono">
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary font-mono flex-wrap">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 rounded-lg">
                         {FRAMEWORKS[cat.framework]?.name}
                       </Badge>
-                      <ArrowRight size={8} className="opacity-40" />
+                      <ArrowRight size={8} className="opacity-30" />
                       {cat.techniques.map((tid) => {
                         const tech = TECHNIQUES.find((t) => t.id === tid);
                         return tech ? (
-                          <Badge key={tid} variant="outline" className="text-[10px] px-1.5 py-0">
+                          <Badge key={tid} variant="outline" className="text-[10px] px-1.5 py-0 rounded-lg">
                             {tech.name}
                           </Badge>
                         ) : null;
@@ -93,8 +94,8 @@ export default function LearnView() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: `${color}12`, border: `1px solid ${color}25` }}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                    style={{ background: `${color}10`, border: `1px solid ${color}20` }}
                   >
                     <BookOpen size={16} style={{ color }} />
                   </div>
@@ -112,8 +113,8 @@ export default function LearnView() {
                   {fw.fields.map((f) => (
                     <div
                       key={f.key}
-                      className="px-3 py-2 rounded-lg text-xs border"
-                      style={{ background: `${color}06`, borderColor: `${color}18` }}
+                      className="px-3.5 py-2.5 rounded-xl text-xs border"
+                      style={{ background: `${color}06`, borderColor: `${color}15` }}
                     >
                       <span className="font-semibold" style={{ color }}>{f.label}</span>
                       <span className="text-text-tertiary ml-2 hidden sm:inline">{f.hint}</span>
@@ -131,7 +132,8 @@ export default function LearnView() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                   style={{ background: 'var(--gradient-accent)' }}>
                 <Zap size={16} className="text-white" />
               </div>
               <CardTitle className="text-base">Prompting Techniques</CardTitle>
@@ -141,8 +143,8 @@ export default function LearnView() {
             {TECHNIQUES.map((tech) => (
               <div
                 key={tech.id}
-                className="flex items-start gap-3 p-4 rounded-lg bg-surface-alt border border-border
-                           hover:bg-surface-hover hover:border-border-focus transition-all duration-150"
+                className="flex items-start gap-3 p-4 rounded-xl bg-surface-alt border border-border
+                           hover:bg-surface-hover hover:border-border-focus transition-all duration-200"
               >
                 <span className="text-xl mt-0.5 shrink-0">{tech.icon}</span>
                 <div>
@@ -150,7 +152,7 @@ export default function LearnView() {
                   <p className="text-xs text-text-secondary leading-relaxed">
                     {tech.description}
                   </p>
-                  <Badge variant="outline" className="mt-2 text-[11px] font-mono">
+                  <Badge variant="outline" className="mt-2 text-[11px] font-mono rounded-lg">
                     Best for: {tech.when}
                   </Badge>
                 </div>
@@ -161,7 +163,7 @@ export default function LearnView() {
       </motion.div>
 
       {/* Source Attribution */}
-      <motion.div variants={item} className="text-center py-4">
+      <motion.div variants={item} className="text-center py-4 pb-8">
         <p className="text-xs text-text-tertiary leading-relaxed">
           Frameworks: COSTAR, 6-Step Prompt Checklist, Markdown Prompting.
           Techniques based on research from{' '}

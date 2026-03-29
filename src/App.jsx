@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { KeyRound, ArrowRight } from 'lucide-react';
 import Navbar from './components/Navbar';
 import PromptInput from './components/PromptInput';
 import AdvancedControls from './components/AdvancedControls';
@@ -8,7 +9,6 @@ import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
 import ErrorBanner from './components/ErrorBanner';
-import ApiKeyBanner from './components/ApiKeyBanner';
 import TransformingOverlay from './components/TransformingOverlay';
 import { useTransform } from './hooks/useTransform';
 import { useTheme } from './hooks/useTheme';
@@ -16,9 +16,9 @@ import { useApiKeys } from './hooks/useApiKeys';
 import { useIntentDetection } from './hooks/useIntentDetection';
 
 const pageVariants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-  exit: { opacity: 0, y: -4, transition: { duration: 0.15 } },
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.15 } },
 };
 
 export default function App() {
@@ -66,10 +66,8 @@ export default function App() {
 
   const handleTransform = useCallback(async () => {
     if (isOverridden) {
-      // Use manual selections
       await transform(badPrompt, effectiveFramework, effectiveTechniques, provider, model, apiKeys[provider]);
     } else {
-      // Use auto-mode
       await autoTransform(badPrompt, intent, provider, model, apiKeys[provider]);
     }
   }, [badPrompt, intent, provider, model, apiKeys, transform, autoTransform, isOverridden, effectiveFramework, effectiveTechniques]);
@@ -97,7 +95,8 @@ export default function App() {
         onToggleTheme={() => setDark((d) => !d)}
       />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      {/* Main content - wider on desktop, full-width on mobile */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
         <AnimatePresence mode="wait">
           {/* STUDIO PAGE */}
           {page === 'studio' && (
@@ -111,21 +110,29 @@ export default function App() {
             >
               {/* Hero text - only when no result */}
               {!result && (
-                <div className="text-center mb-6">
-                  <h1 className="text-2xl sm:text-3xl font-semibold text-text tracking-tight">
-                    Describe what you need
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="text-center mb-8"
+                >
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text tracking-tight">
+                    Turn <span className="gradient-text">bad prompts</span> into great ones
                   </h1>
-                  <p className="text-sm text-text-tertiary mt-2 max-w-lg mx-auto">
-                    Type, speak, or upload a document. We'll detect your intent and generate
-                    an optimized, ready-to-use prompt automatically.
+                  <p className="text-sm sm:text-base text-text-tertiary mt-2.5 max-w-xl mx-auto leading-relaxed">
+                    Paste your rough prompt and we'll optimize it using proven frameworks
+                    and techniques — automatically.
                   </p>
-                </div>
+                </motion.div>
               )}
 
               <PromptInput
                 value={badPrompt}
                 onChange={setBadPrompt}
                 intent={intent}
+                onSubmit={handleTransform}
+                canSubmit={!!badPrompt.trim() && !loading}
+                hasApiKey={!!apiKeys[provider]}
               />
 
               {/* Advanced controls */}
@@ -142,11 +149,19 @@ export default function App() {
               <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
 
               {!apiKeys[provider] && (
-                <ApiKeyBanner
-                  provider={provider}
-                  onAddKey={(key) => setApiKeys({ ...apiKeys, [provider]: key })}
-                  onGoToSettings={() => setPage('settings')}
-                />
+                <motion.button
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() => setPage('settings')}
+                  className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl
+                             border border-accent/20 bg-accent-light hover:bg-accent-light/80
+                             text-sm font-medium text-accent-text hover:text-accent
+                             transition-all duration-200 active:scale-[0.98]"
+                >
+                  <KeyRound size={16} />
+                  <span>Add API key in Settings to get started</span>
+                  <ArrowRight size={14} className="opacity-50" />
+                </motion.button>
               )}
 
               <TransformButton
@@ -163,10 +178,10 @@ export default function App() {
               <AnimatePresence>
                 {result && !loading && (
                   <motion.div
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   >
                     <ResultView
                       result={result}
@@ -191,11 +206,11 @@ export default function App() {
               animate="animate"
               exit="exit"
             >
-              <header className="mb-6">
-                <h1 className="text-xl sm:text-2xl font-semibold text-text tracking-tight">
+              <header className="mb-8">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
                   Learn
                 </h1>
-                <p className="text-sm text-text-tertiary mt-1">
+                <p className="text-sm sm:text-base text-text-tertiary mt-1.5">
                   Explore frameworks, techniques, and intent categories
                 </p>
               </header>
@@ -212,11 +227,11 @@ export default function App() {
               animate="animate"
               exit="exit"
             >
-              <header className="mb-6">
-                <h1 className="text-xl sm:text-2xl font-semibold text-text tracking-tight">
+              <header className="mb-8">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
                   Settings
                 </h1>
-                <p className="text-sm text-text-tertiary mt-1">
+                <p className="text-sm sm:text-base text-text-tertiary mt-1.5">
                   Configure providers, models, and API keys
                 </p>
               </header>

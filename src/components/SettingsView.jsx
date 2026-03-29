@@ -29,11 +29,11 @@ const PROVIDERS = {
   },
 };
 
-const selectClass = `w-full px-3 py-2.5 rounded-lg text-sm text-text outline-none transition-all
+const selectClass = `w-full px-3.5 py-2.5 rounded-xl text-sm text-text outline-none transition-all
   bg-surface-alt border border-border
-  focus:border-accent focus:ring-2 focus:ring-accent/15 focus:bg-surface appearance-none`;
+  focus:border-accent focus:ring-2 focus:ring-accent/15 focus:bg-surface appearance-none cursor-pointer`;
 
-const inputClass = `w-full px-3 py-2.5 rounded-lg text-sm text-text outline-none transition-all
+const inputClass = `w-full px-3.5 py-2.5 rounded-xl text-sm text-text outline-none transition-all
   bg-surface-alt border border-border
   focus:border-accent focus:ring-2 focus:ring-accent/15 focus:bg-surface`;
 
@@ -61,8 +61,9 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
         {/* Model Settings */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                   style={{ background: 'var(--gradient-accent)' }}>
                 <Cpu size={16} className="text-white" />
               </div>
               <div>
@@ -132,8 +133,8 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
         {/* API Key */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-accent-light border border-accent/15 flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-accent-light border border-accent/15 flex items-center justify-center">
                 <Key size={16} className="text-accent" />
               </div>
               <div>
@@ -171,7 +172,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
                       <Badge
                         key={key}
                         variant={hasSaved ? 'success' : 'outline'}
-                        className="text-[11px] gap-1"
+                        className="text-[11px] gap-1 rounded-lg"
                       >
                         {hasSaved && <Check size={10} />}
                         {info.label}
@@ -191,7 +192,7 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
               </div>
             )}
 
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-accent-light/50 border border-accent/10">
+            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-accent-light/50 border border-accent/10">
               <Shield size={14} className="text-accent shrink-0 mt-0.5" />
               <div className="text-xs text-text-secondary leading-relaxed">
                 <p className="mb-1">Keys are saved in local storage and never sent to any third-party server.</p>
@@ -211,22 +212,22 @@ export default function SettingsView({ provider, onProviderChange, model, onMode
       {/* About */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent-light">
-              <Info size={14} className="text-accent" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-accent-light">
+              <Info size={16} className="text-accent" />
             </div>
             <CardTitle>About Prompt Studio</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-text-secondary leading-relaxed">
-            <div className="p-3 rounded-lg bg-surface-alt border border-border">
+            <div className="p-4 rounded-xl bg-surface-alt border border-border">
               Transforms vague prompts into polished, structured ones using proven prompt engineering frameworks.
             </div>
-            <div className="p-3 rounded-lg bg-surface-alt border border-border">
+            <div className="p-4 rounded-xl bg-surface-alt border border-border">
               Pick a framework (COSTAR, 6-Step, Markdown) and techniques (Zero-Shot, Few-Shot, Chain-of-Thought) to guide the rewrite.
             </div>
-            <div className="p-3 rounded-lg bg-surface-alt border border-border text-text-tertiary">
+            <div className="p-4 rounded-xl bg-surface-alt border border-border text-text-tertiary">
               Built with React, Vite, Tailwind CSS, and Framer Motion.
             </div>
           </div>

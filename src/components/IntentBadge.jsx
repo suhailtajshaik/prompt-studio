@@ -20,41 +20,41 @@ export default function IntentBadge({ intent, className }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -4 }}
         transition={{ duration: 0.2 }}
-        className={cn("flex items-center gap-3 flex-wrap", className)}
+        className={cn("flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap", className)}
       >
         {/* Intent pill */}
         <div
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium border w-fit"
           style={{
             color: primary.color,
-            backgroundColor: `${primary.color}10`,
-            borderColor: `${primary.color}25`,
+            backgroundColor: `${primary.color}0C`,
+            borderColor: `${primary.color}20`,
           }}
         >
-          <Sparkles size={12} />
+          <Sparkles size={11} />
           <span>Detected: {primary.icon} {primary.label}</span>
           {confidence >= 0.5 && (
-            <span className="opacity-60">
+            <span className="opacity-50 font-mono text-[10px]">
               {Math.round(confidence * 100)}%
             </span>
           )}
         </div>
 
         {/* Auto-selected framework + techniques */}
-        <div className="flex items-center gap-1.5 text-[11px] text-text-tertiary">
-          <span className="px-2 py-0.5 rounded-md bg-surface-alt border border-border font-mono">
+        <div className="flex items-center gap-1.5 text-[11px] text-text-tertiary flex-wrap">
+          <span className="px-2 py-0.5 rounded-lg bg-surface-alt border border-border font-mono">
             {fw?.name || primary.framework}
           </span>
-          <ChevronRight size={10} className="opacity-40" />
+          <ChevronRight size={10} className="opacity-30" />
           {techNames.map((name) => (
-            <span key={name} className="px-2 py-0.5 rounded-md bg-surface-alt border border-border font-mono">
+            <span key={name} className="px-2 py-0.5 rounded-lg bg-surface-alt border border-border font-mono">
               {name}
             </span>
           ))}
         </div>
 
         {secondary && (
-          <span className="text-[11px] text-text-tertiary opacity-60">
+          <span className="text-[11px] text-text-tertiary opacity-50">
             also: {secondary.icon} {secondary.label}
           </span>
         )}

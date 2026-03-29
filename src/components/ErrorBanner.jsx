@@ -13,10 +13,10 @@ export default function ErrorBanner({ message, details, onDismiss }) {
           initial={{ opacity: 0, y: -4, height: 0 }}
           animate={{ opacity: 1, y: 0, height: 'auto' }}
           exit={{ opacity: 0, y: -4, height: 0 }}
-          className="rounded-lg border border-danger/20 bg-danger-light p-4"
+          className="rounded-2xl border border-danger/20 bg-danger-light p-4 sm:p-5"
         >
           <div className="flex items-start gap-3">
-            <div className="w-7 h-7 rounded-md bg-danger/10 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-danger/10 flex items-center justify-center shrink-0">
               <AlertCircle size={14} className="text-danger" />
             </div>
             <div className="flex-1 min-w-0">
@@ -36,7 +36,7 @@ export default function ErrorBanner({ message, details, onDismiss }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-text-tertiary hover:text-danger"
+              className="h-8 w-8 rounded-xl text-text-tertiary hover:text-danger"
               onClick={onDismiss}
             >
               <X size={14} />
@@ -51,8 +51,8 @@ export default function ErrorBanner({ message, details, onDismiss }) {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <pre className="mt-3 ml-10 text-[11px] text-text-tertiary font-mono
-                              bg-surface-alt rounded-md p-3 whitespace-pre-wrap break-words
+                <pre className="mt-3 ml-11 text-[11px] text-text-tertiary font-mono
+                              bg-surface-alt rounded-xl p-3.5 whitespace-pre-wrap break-words
                               border border-border leading-relaxed">
                   {details}
                 </pre>
