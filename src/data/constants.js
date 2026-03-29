@@ -100,14 +100,12 @@ export const TECHNIQUES = [
 ];
 
 export const EXAMPLE_PROMPTS = [
-  { bad: 'Write me an email', label: 'Vague Email', category: 'writing' },
-  { bad: 'Explain python', label: 'Too Broad', category: 'learning' },
-  { bad: 'Make a website', label: 'No Details', category: 'code' },
-  { bad: 'Help me with my resume', label: 'Unclear Goal', category: 'career' },
-  { bad: 'Write a blog post about AI', label: 'Generic Topic', category: 'writing' },
-  { bad: 'Fix my code', label: 'No Context', category: 'code' },
-  { bad: 'Give me a marketing plan', label: 'Missing Scope', category: 'business' },
-  { bad: 'Create a database', label: 'Underspecified', category: 'code' },
+  { bad: 'I need to write a professional email to decline a job offer politely while keeping the door open for future opportunities', label: 'Decline Offer Email', category: 'writing' },
+  { bad: 'Help me create a Python script that reads a CSV of customer data, finds duplicates based on email, and exports a clean version', label: 'Clean CSV Data', category: 'code' },
+  { bad: 'I want to understand how React useEffect works, when it runs, cleanup functions, and common mistakes to avoid', label: 'Learn useEffect', category: 'learning' },
+  { bad: 'Write a product launch announcement for our new AI-powered writing assistant targeting small business owners', label: 'Product Launch', category: 'writing' },
+  { bad: 'Design a PostgreSQL schema for a multi-tenant SaaS app with user roles, permissions, and audit logging', label: 'DB Schema Design', category: 'code' },
+  { bad: 'Create a 30-60-90 day onboarding plan for a new senior frontend engineer joining a team of 8', label: 'Onboarding Plan', category: 'business' },
 ];
 
 export const SYSTEM_PROMPT = `You are an expert prompt engineer with deep knowledge of prompting frameworks and techniques from promptingguide.ai research. Your job is to transform bad, vague, or poorly structured prompts into high-quality, effective prompts.
@@ -207,3 +205,23 @@ REWRITTEN_PROMPT:
 ---
 
 Do not add any other text, explanations, or markdown formatting outside this structure.`;
+
+export const AUTO_MODE_SYSTEM_PROMPT = `You are an expert prompt engineer. Your job is to transform raw, unstructured user input into a polished, optimized, ready-to-use prompt.
+
+The user's intent has been auto-detected, and a framework and techniques have been pre-selected. Apply them intelligently.
+
+**Rules:**
+1. Extract the user's true goal from their messy input
+2. Apply the given framework to add structure
+3. Apply the given technique(s) to maximize effectiveness
+4. Add specificity: audience, constraints, format, examples where needed
+5. Keep the output practical — no bloated padding
+6. Use clear delimiters (###, ---, XML tags) to separate sections
+7. If Chain-of-Thought is selected, include "Let's think step by step" or equivalent
+8. If Role Prompting is selected, add a clear persona/role
+9. If Few-Shot is selected, include 2-3 concrete examples
+10. If Structured Output is selected, define the exact output format
+11. If Meta Prompting is selected, include self-reflection instructions
+
+**Output format:**
+Respond ONLY with the improved prompt text. No explanations, no meta-commentary, no markdown code fences wrapping the prompt. Just the clean, ready-to-use prompt.`;

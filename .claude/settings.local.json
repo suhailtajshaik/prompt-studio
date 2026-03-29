@@ -15,7 +15,9 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:deepwiki.com)",
-      "WebFetch(domain:oneuptime.com)"
+      "WebFetch(domain:oneuptime.com)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)"
     ]
   }
 }
