@@ -8,6 +8,7 @@ import TransformButton from './components/TransformButton';
 import ResultView from './components/ResultView';
 import LearnView from './components/LearnView';
 import SettingsView from './components/SettingsView';
+import AppearanceView from './components/AppearanceView';
 import ErrorBanner from './components/ErrorBanner';
 import TransformingOverlay from './components/TransformingOverlay';
 import { useTransform } from './hooks/useTransform';
@@ -24,7 +25,7 @@ const pageVariants = {
 export default function App() {
   const [page, setPage] = useState('studio');
   const [badPrompt, setBadPrompt] = useState('');
-  const [dark, setDark] = useTheme();
+  const [dark, setDark, themeId, setThemeId, currentTheme] = useTheme();
 
   const [provider, setProvider] = useState('anthropic');
   const [model, setModel] = useState('claude-sonnet-4-6');
@@ -32,6 +33,10 @@ export default function App() {
 
   const { result, loading, error, usedConfig, transform, autoTransform, reset } = useTransform();
   const intent = useIntentDetection(badPrompt);
+
+  // Snapshot of the prompt at submit time — frozen so ResultView's "Before" panel
+  // doesn't go blank if the user edits/clears the textarea afterward.
+  const [submittedPrompt, setSubmittedPrompt] = useState('');
 
   // Advanced mode: manual framework + technique overrides
   const [manualFramework, setManualFramework] = useState(null);
@@ -64,7 +69,15 @@ export default function App() {
     setManualTechniques(null);
   }, []);
 
+  // Immediately lock the current auto-detected values into manual overrides
+  // so the picker opens pre-filled and isOverridden flips to true right away.
+  const handleEnterManual = useCallback(() => {
+    setManualFramework(autoFramework);
+    setManualTechniques(autoTechniques);
+  }, [autoFramework, autoTechniques]);
+
   const handleTransform = useCallback(async () => {
+    setSubmittedPrompt(badPrompt); // snapshot before any async state change
     if (isOverridden) {
       await transform(badPrompt, effectiveFramework, effectiveTechniques, provider, model, apiKeys[provider]);
     } else {
@@ -82,6 +95,7 @@ export default function App() {
 
   const handleNewPrompt = useCallback(() => {
     setBadPrompt('');
+    setSubmittedPrompt('');
     reset();
     handleResetToAuto();
   }, [reset, handleResetToAuto]);
@@ -93,10 +107,12 @@ export default function App() {
         onChange={setPage}
         dark={dark}
         onToggleTheme={() => setDark((d) => !d)}
+        currentTheme={currentTheme}
       />
 
-      {/* Main content - wider on desktop, full-width on mobile */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-10">
+      {/* Main content — offset by sidebar width on desktop, consistent max-width for all pages */}
+      <main className="md:ml-56 px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 md:pb-10">
+        <div className="max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           {/* STUDIO PAGE */}
           {page === 'studio' && (
@@ -119,7 +135,7 @@ export default function App() {
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text tracking-tight">
                     Turn <span className="gradient-text">bad prompts</span> into great ones
                   </h1>
-                  <p className="text-sm sm:text-base text-text-tertiary mt-2.5 max-w-xl mx-auto leading-relaxed">
+                  <p className="text-sm sm:text-base text-text-secondary mt-2.5 max-w-xl mx-auto leading-relaxed">
                     Paste your rough prompt and we'll optimize it using proven frameworks
                     and techniques — automatically.
                   </p>
@@ -144,6 +160,7 @@ export default function App() {
                 intent={intent}
                 isOverridden={isOverridden}
                 onResetToAuto={handleResetToAuto}
+                onEnterManual={handleEnterManual}
               />
 
               <ErrorBanner message={error?.message} details={error?.details} onDismiss={reset} />
@@ -185,7 +202,7 @@ export default function App() {
                   >
                     <ResultView
                       result={result}
-                      badPrompt={badPrompt}
+                      badPrompt={submittedPrompt}
                       frameworkId={usedConfig?.frameworkId}
                       techniqueIds={usedConfig?.techniqueIds || []}
                       intent={intent}
@@ -210,11 +227,32 @@ export default function App() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
                   Learn
                 </h1>
-                <p className="text-sm sm:text-base text-text-tertiary mt-1.5">
+                <p className="text-sm sm:text-base text-text-secondary mt-1.5">
                   Explore frameworks, techniques, and intent categories
                 </p>
               </header>
               <LearnView />
+            </motion.div>
+          )}
+
+          {/* APPEARANCE PAGE */}
+          {page === 'appearance' && (
+            <motion.div
+              key="appearance"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <header className="mb-8">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
+                  Appearance
+                </h1>
+                <p className="text-sm sm:text-base text-text-secondary mt-1.5">
+                  Choose a theme that fits your workflow and style.
+                </p>
+              </header>
+              <AppearanceView themeId={themeId} onThemeChange={setThemeId} />
             </motion.div>
           )}
 
@@ -229,9 +267,9 @@ export default function App() {
             >
               <header className="mb-8">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text tracking-tight">
-                  Settings
+                  API Keys
                 </h1>
-                <p className="text-sm sm:text-base text-text-tertiary mt-1.5">
+                <p className="text-sm sm:text-base text-text-secondary mt-1.5">
                   Configure providers, models, and API keys
                 </p>
               </header>
@@ -247,6 +285,7 @@ export default function App() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </main>
 
       <AnimatePresence>

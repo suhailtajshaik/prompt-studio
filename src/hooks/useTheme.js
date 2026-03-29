@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { getTheme, applyTheme, restoreTheme, DARK_PAIRS } from '../data/themes';
 
 export function useTheme() {
-  const [dark, setDark] = useState(() => {
-    const stored = localStorage.getItem('theme');
-    if (stored) return stored === 'dark';
-    // Default to dark theme
-    if (!stored) return true;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const [themeId, setThemeId] = useState(() => restoreTheme());
 
+  // Re-apply whenever themeId changes
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
-  }, [dark]);
+    applyTheme(themeId);
+  }, [themeId]);
 
-  return [dark, setDark];
+  const currentTheme = getTheme(themeId);
+  const dark = currentTheme.dark;
+
+  // Toggle between the light ↔ dark variant of the same family
+  const setDark = useCallback(() => {
+    setThemeId((prev) => DARK_PAIRS[prev] || prev);
+  }, []);
+
+  return [dark, setDark, themeId, setThemeId, currentTheme];
 }
